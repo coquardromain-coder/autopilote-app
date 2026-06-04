@@ -17,10 +17,31 @@ initSchema();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+
+// CORS configurable : FRONTEND_ORIGIN peut contenir plusieurs origines
+// séparées par des virgules (ex: "https://app.exemple.fr,http://localhost:3000").
+const DEFAULT_ORIGIN = 'http://ruo4s93g0vwuv3ogm0ayatpl.157.180.72.230.sslip.io';
+const ALLOWED_ORIGINS = (process.env.FRONTEND_ORIGIN || DEFAULT_ORIGIN)
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 // Middlewares globaux
-app.use(cors({ origin: FRONTEND_ORIGIN }));
+app.use(
+  cors({
+    // Autorise les origines listées. Les requêtes sans en-tête Origin
+    // (curl, appels serveur à serveur, health checks) sont acceptées.
+    origin(origin, callback) {
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+        return callback(null, true);
+      }
+      // Origine non autorisée : on n'émet aucun en-tête CORS (le navigateur
+      // bloquera la requête) sans générer d'erreur 500 ni polluer les logs.
+      return callback(null, false);
+    },
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: '1mb' }));
 
 // Journalisation simple des requêtes
@@ -68,5 +89,6 @@ app.listen(PORT, () => {
   console.log(`  Mode IA : ${isLive() ? 'LIVE (Anthropic)' : 'DÉMONSTRATION (sans clé API)'}`);
   console.log(`  Modèle  : ${MODEL}`);
   console.log(`  Google  : ${googleLib.isConfigured() ? 'configuré (Gmail, Calendar, Drive)' : 'non configuré'}`);
+  console.log(`  CORS    : ${ALLOWED_ORIGINS.join(', ')}`);
   console.log('────────────────────────────────────────────');
 });
