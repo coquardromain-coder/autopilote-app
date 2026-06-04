@@ -9,6 +9,9 @@ out/
 .env
 .env.*
 !.env.example
+# Exception : config de PROD du frontend (uniquement des variables
+# publiques NEXT_PUBLIC_*, jamais de secret) — versionnée pour le déploiement.
+!.env.production
 
 # Identifiants Google OAuth (secrets — ne jamais versionner)
 client_secret*.json
