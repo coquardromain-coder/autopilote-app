@@ -22,7 +22,7 @@
 4. **Connexion API Anthropic** — `backend/anthropic.js` (modèle `claude-sonnet-4-6`, repli automatique en mode démonstration sans clé).
 5. **Agent Pilot (orchestrateur)** — `backend/agents/pilot.js` : analyse d'intention par mots-clés + délégation.
 
-**Base de données** : SQLite via le module natif `node:sqlite` (aucune compilation, aucune config). Schéma dans `backend/db.js`.
+**Base de données** : SQLite via `better-sqlite3` (module npm standard avec binaires précompilés, compatible production et toutes versions de Node). Schéma dans `backend/db.js`.
 
 ## PHASE 2 — Premiers agents ✅
 

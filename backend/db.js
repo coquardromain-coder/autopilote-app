@@ -1,18 +1,20 @@
 /**
  * Couche d'accès à la base de données.
- * Utilise le module SQLite natif de Node.js (node:sqlite) : aucune
- * dépendance externe ni compilation native. La base est un simple
- * fichier local "autopilote.db".
+ * Utilise better-sqlite3, un module npm standard compatible avec toutes
+ * les versions de Node.js (binaires précompilés, fonctionne en
+ * production). L'API (prepare/run/get/all, lastInsertRowid, changes)
+ * est identique à celle de node:sqlite. La base est un simple fichier
+ * local "autopilote.db".
  */
-const { DatabaseSync } = require('node:sqlite');
+const Database = require('better-sqlite3');
 const path = require('path');
 
 // Fichier de base de données local (créé automatiquement)
 const DB_PATH = path.join(__dirname, 'autopilote.db');
-const db = new DatabaseSync(DB_PATH);
+const db = new Database(DB_PATH);
 
 // Active les clés étrangères
-db.exec('PRAGMA foreign_keys = ON;');
+db.pragma('foreign_keys = ON');
 
 /**
  * Initialise le schéma de la base si nécessaire.

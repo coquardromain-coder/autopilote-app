@@ -10,7 +10,7 @@ délègue au bon spécialiste.
 |--------|-------------|
 | Frontend | Next.js 14 (App Router) + Tailwind CSS |
 | Backend | Node.js + Express |
-| Base de données | SQLite — module natif `node:sqlite` (zéro config, zéro compilation) |
+| Base de données | SQLite via `better-sqlite3` (module npm standard, binaires précompilés, compatible toutes versions de Node) |
 | Authentification | JWT local (bcryptjs + jsonwebtoken) |
 | Agents IA | API Anthropic — `claude-sonnet-4-6` (repli en mode démo sans clé) |
 | Paiements | Simulés (pas de Stripe) |
@@ -25,7 +25,7 @@ délègue au bon spécialiste.
 
 ## 🚀 Démarrage rapide
 
-Prérequis : **Node.js ≥ 22** (le projet utilise le SQLite natif de Node).
+Prérequis : **Node.js ≥ 16** (`better-sqlite3` fournit des binaires précompilés).
 
 ### 1. Backend (API)
 
@@ -59,7 +59,7 @@ autopilote-app/
 ├── backend/              # API Express + SQLite + JWT + agents
 │   ├── agents/           # registry.js (17 agents) + pilot.js (orchestrateur)
 │   ├── routes/           # auth, chat, crm, billing, analytics
-│   ├── db.js             # schéma SQLite (node:sqlite)
+│   ├── db.js             # schéma SQLite (better-sqlite3)
 │   ├── anthropic.js      # client API Anthropic
 │   └── server.js         # point d'entrée
 ├── frontend/             # Next.js 14 + Tailwind
