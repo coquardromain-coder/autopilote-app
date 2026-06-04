@@ -1,0 +1,36 @@
+# Dépendances
+node_modules/
+
+# Build Next.js
+.next/
+out/
+
+# Variables d'environnement (secrets)
+.env
+.env.*
+!.env.example
+
+# Identifiants Google OAuth (secrets — ne jamais versionner)
+client_secret*.json
+google-credentials.json
+*.pem
+*.key
+token*.json
+credentials.json
+
+# Base de données locale SQLite
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+
+# Réglages locaux Claude Code (propres à la machine)
+.claude/settings.local.json
