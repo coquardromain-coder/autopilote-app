@@ -15,7 +15,12 @@ const google = require('../google');
 
 const router = express.Router();
 
-const FRONTEND = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+// FRONTEND_ORIGIN peut contenir plusieurs origines (CORS) séparées par
+// des virgules ; pour les redirections OAuth on utilise la première.
+const FRONTEND =
+  (process.env.FRONTEND_ORIGIN || 'http://localhost:3000')
+    .split(',')[0]
+    .trim();
 
 /**
  * GET /auth/google?token=<JWT>
