@@ -9,6 +9,7 @@ out/
 .env
 .env.*
 !.env.example
+!.env.dolibarr.example
 # Exception : config de PROD du frontend (uniquement des variables
 # publiques NEXT_PUBLIC_*, jamais de secret) — versionnée pour le déploiement.
 !.env.production
