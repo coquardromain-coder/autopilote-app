@@ -53,6 +53,8 @@ app.use(
   })
 );
 app.use(express.json({ limit: '1mb' }));
+// Parsing urlencoded (webhooks Twilio envoient du x-www-form-urlencoded)
+app.use(express.urlencoded({ extended: false }));
 
 // Journalisation simple des requêtes
 app.use((req, _res, next) => {
@@ -72,12 +74,18 @@ app.get('/api/health', (_req, res) => {
 });
 
 // Montage des routes
-// Flux OAuth Google monté à la racine (correspond à l'URI de redirection)
+// Flux OAuth montés à la racine (Google d'abord, puis réseaux sociaux)
 app.use('/auth', require('./routes/googleAuth'));
+app.use('/auth', require('./routes/socialAuth'));
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/google', require('./routes/google'));
 app.use('/api/config', require('./routes/config'));
+app.use('/api/whatsapp', require('./routes/whatsapp'));
+app.use('/api/social', require('./routes/social'));
+app.use('/api/content', require('./routes/content'));
+app.use('/api/documents', require('./routes/documents'));
+app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/crm', require('./routes/crm'));
 app.use('/api/billing', require('./routes/billing'));

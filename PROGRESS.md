@@ -135,6 +135,50 @@ aucune occurrence des anciens noms ne subsiste (hors marque « AutoPilote »).
 
 ---
 
+## 🚀 PHASE 7 — Canaux, publication & UX avancée ✅
+
+### Étape 1 — WhatsApp pour le Directeur ✅
+`backend/whatsapp.js` (API Twilio via fetch, **mode simulation** sans clés) +
+`routes/whatsapp.js` : `POST /api/whatsapp/webhook` (réception, **transcription**
+des messages vocaux), `POST /api/whatsapp/send`, `GET /api/whatsapp/conversations`.
+Le Directeur reçoit, délègue et répond sur WhatsApp. Page `dashboard/whatsapp`
+(liaison du numéro, envoi, historique). Env : `TWILIO_ACCOUNT_SID/AUTH_TOKEN/WHATSAPP_NUMBER`.
+
+### Étape 2 — Publication réseaux sociaux (Créatif) ✅
+`backend/social.js` + `routes/social.js` + `routes/socialAuth.js` : OAuth Facebook/Instagram
+(Meta) et LinkedIn, publication & programmation, stats basiques. **Commandes via le Directeur**
+(« publie ce post sur LinkedIn ») détectées et exécutées (`chat.js`). UI dans Intégrations.
+Mode simulation si pas de clés. Env : `META_APP_ID/SECRET`, `LINKEDIN_CLIENT_ID/SECRET`.
+
+### Étape 3 — Enrichissement du Référenceur ✅
+Prompt enrichi (articles de blog H1/H2/H3 + meta description + mots-clés, calendrier
+éditorial, analyse de mots-clés). Publication WordPress via `backend/wordpress.js` +
+`routes/content.js` (`POST /api/content/wordpress/publish`). Mode simulation.
+Env : `WORDPRESS_URL/USER/PASSWORD`. (Formateur recentré sur la formation pour éviter
+le doublon SEO.)
+
+### Étape 4 — Enrichissement du Juriste ✅
+Prompt enrichi (CGV, mentions légales, contrats de prestation, NDA, Q&R juridiques FR)
+avec mention obligatoire « Ce document est fourni à titre indicatif et ne remplace pas
+l'avis d'un avocat ». Modèles juridiques ajoutés à `templates.js`.
+
+### Étape 5 — UX prioritaires ✅
+- Indicateur de travail **contextuel** (« Le Deviseur rédige votre devis… »).
+- Historique des conversations **persistant et recherchable** (`GET /api/chat/search`).
+- **Export PDF** des réponses (`lib/pdf.js`).
+- Page **« Mes documents »** : tous les contenus générés, classés par type/date
+  (auto-enregistrement, `routes/documents.js`).
+- **Notifications** dashboard quand une tâche est terminée (cloche + `routes/notifications.js`).
+
+### Étape 6 — Nouvelle grille tarifaire ✅
+Starter 49€ · Business 99€ · Elite 199€ · Agence 399€ (front `lib/agents.js` + back `billing.js`).
+
+**Validé** : build de production OK (17 routes) ; backend testé (WhatsApp/social/WordPress en
+simulation, commande Directeur→Créatif→publication, documents auto-enregistrés, notifications) ;
+design dark premium conservé ; tout en français ; modes simulation actifs sans clés API.
+
+---
+
 ## 📝 Notes & limitations connues
 
 - **Mode IA** : sans `ANTHROPIC_API_KEY`, les agents répondent en *mode démonstration*

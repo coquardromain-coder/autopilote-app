@@ -16,7 +16,14 @@ const TEMPLATE_TYPES = [
   { id: 'relance', label: 'Email de relance', description: 'Séquence J+3, J+7 et J+15.' },
   { id: 'bienvenue', label: 'Email de bienvenue', description: 'Message d\'accueil d\'un nouveau client.' },
   { id: 'compte_rendu', label: 'Compte-rendu de réunion', description: 'Trame de compte-rendu structuré.' },
+  { id: 'cgv', label: 'CGV', description: 'Conditions générales de vente (droit français).' },
+  { id: 'mentions_legales', label: 'Mentions légales', description: 'Mentions légales pour site/document.' },
+  { id: 'contrat_prestation', label: 'Contrat de prestation', description: 'Contrat de prestation de services.' },
+  { id: 'nda', label: 'Accord de confidentialité (NDA)', description: 'Accord de non-divulgation.' },
 ];
+
+// Mention obligatoire à apposer sur tout document juridique.
+const DISCLAIMER = '\n\n---\n_Ce document est fourni à titre indicatif et ne remplace pas l\'avis d\'un avocat._';
 
 // ─────────────────── Helpers ───────────────────
 
@@ -255,7 +262,95 @@ function compteRendu(user) {
 _Compte-rendu rédigé par ${user.company || '[votre entreprise]'}._`;
 }
 
-const RENDERERS = { devis, facture, prospection, relance, bienvenue, compte_rendu: compteRendu };
+function cgv(user) {
+  return `# Conditions Générales de Vente
+
+**${user.company || '[Entreprise]'}**${user.siret ? ` — SIRET ${user.siret}` : ''}
+
+**Article 1 — Objet.** Les présentes CGV régissent les ventes de prestations/produits de
+${user.company || "l'entreprise"} à ses clients.
+
+**Article 2 — Prix.** Les prix sont indiqués en euros${user.vat_rate ? `, TVA ${user.vat_rate} % en sus` : ''}.
+
+**Article 3 — Commande.** Toute commande implique l'acceptation sans réserve des présentes CGV.
+
+**Article 4 — Paiement.** Paiement à 30 jours sauf accord contraire. Tout retard entraîne des
+pénalités (3× le taux d'intérêt légal) et une indemnité forfaitaire de 40 € (art. L441-10 C. com.).
+
+**Article 5 — Rétractation.** Pour les consommateurs, délai légal de 14 jours selon le Code de la consommation.
+
+**Article 6 — Responsabilité & garanties.** Application des garanties légales de conformité et des vices cachés.
+
+**Article 7 — Données personnelles (RGPD).** Les données sont traitées conformément au RGPD.
+
+**Article 8 — Litiges.** Droit français applicable. Recours préalable à la médiation de la consommation.${DISCLAIMER}`;
+}
+
+function mentionsLegales(user) {
+  return `# Mentions légales
+
+**Éditeur :** ${user.company || '[Entreprise]'}
+**Adresse :** ${user.address || '[Adresse]'}
+**SIRET :** ${user.siret || '[SIRET]'}
+**Contact :** [email / téléphone]
+**Directeur de la publication :** ${user.name || '[Nom]'}
+
+**Hébergement :** [nom et adresse de l'hébergeur]
+
+**Propriété intellectuelle :** l'ensemble du contenu est protégé. Toute reproduction est interdite sans autorisation.
+
+**Données personnelles (RGPD) :** vous disposez d'un droit d'accès, de rectification et de suppression de vos données.${DISCLAIMER}`;
+}
+
+function contratPrestation(user, client) {
+  return `# Contrat de prestation de services
+
+**Entre les soussignés :**
+- **Le Prestataire :** ${user.company || '[Entreprise]'}${user.siret ? `, SIRET ${user.siret}` : ''}${user.address ? `, ${user.address}` : ''}
+- **Le Client :** ${client.name}${client.company ? ` — ${client.company}` : ''}
+
+**Article 1 — Objet.** Le Prestataire réalise pour le Client la prestation suivante : [description].
+
+**Article 2 — Durée.** Le contrat prend effet le [date] pour une durée de [durée].
+
+**Article 3 — Prix et paiement.** Montant : [montant] €${user.vat_rate ? ` HT (TVA ${user.vat_rate} %)` : ''}. Modalités : [acompte / échéancier].
+
+**Article 4 — Obligations des parties.** Le Prestataire s'engage à un devoir de conseil ; le Client à fournir les éléments nécessaires.
+
+**Article 5 — Confidentialité.** Les parties s'engagent à la confidentialité des informations échangées.
+
+**Article 6 — Résiliation.** En cas de manquement, résiliation possible après mise en demeure restée infructueuse (15 jours).
+
+**Article 7 — Droit applicable.** Droit français. Tribunaux compétents : [ressort].
+
+Fait à [lieu], le [date], en deux exemplaires.
+**Le Prestataire** _____________  **Le Client** _____________${DISCLAIMER}`;
+}
+
+function nda(user, client) {
+  return `# Accord de confidentialité (NDA)
+
+**Entre :** ${user.company || '[Entreprise]'} et ${client.name}${client.company ? ` (${client.company})` : ''}.
+
+**Article 1 — Objet.** Le présent accord vise à protéger les informations confidentielles échangées dans le cadre de [contexte].
+
+**Article 2 — Informations confidentielles.** Toute information communiquée, écrite ou orale, identifiée comme confidentielle.
+
+**Article 3 — Engagements.** Les parties s'engagent à ne pas divulguer ni utiliser ces informations à d'autres fins que celles prévues.
+
+**Article 4 — Durée.** L'obligation de confidentialité court pendant [durée] à compter de la signature.
+
+**Article 5 — Exclusions.** Sont exclues les informations publiques ou déjà connues licitement.
+
+**Article 6 — Droit applicable.** Droit français.
+
+Fait à [lieu], le [date].${DISCLAIMER}`;
+}
+
+const RENDERERS = {
+  devis, facture, prospection, relance, bienvenue, compte_rendu: compteRendu,
+  cgv, mentions_legales: mentionsLegales, contrat_prestation: contratPrestation, nda,
+};
 
 /**
  * Rend un modèle pour un utilisateur donné.

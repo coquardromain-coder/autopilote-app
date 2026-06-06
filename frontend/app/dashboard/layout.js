@@ -7,14 +7,17 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import NotificationBell from '@/components/NotificationBell';
 
 const NAV = [
   { href: '/dashboard', label: 'Vue d\'ensemble', icon: '📊' },
   { href: '/dashboard/chat', label: 'Discuter avec les agents', icon: '💬' },
-  { href: '/dashboard/agents', label: 'Mes 17 agents', icon: '🤖' },
+  { href: '/dashboard/whatsapp', label: 'WhatsApp', icon: '📲' },
+  { href: '/dashboard/agents', label: 'Mes 19 agents', icon: '🤖' },
   { href: '/dashboard/crm', label: 'CRM — Contacts', icon: '🤝' },
   { href: '/dashboard/billing', label: 'Facturation & Devis', icon: '🧾' },
-  { href: '/dashboard/integrations', label: 'Intégrations Google', icon: '🔗' },
+  { href: '/dashboard/documents', label: 'Mes documents', icon: '📁' },
+  { href: '/dashboard/integrations', label: 'Intégrations', icon: '🔗' },
   { href: '/dashboard/settings', label: 'Paramètres', icon: '⚙️' },
 ];
 
@@ -70,9 +73,13 @@ export default function DashboardLayout({ children }) {
 
       {/* Contenu principal */}
       <main className="flex-1 md:ml-64">
-        <div className="md:hidden flex items-center justify-between px-4 h-14 border-b border-white/[0.06] bg-ink-800/60 backdrop-blur-xl sticky top-0 z-30">
-          <span className="font-bold flex items-center gap-2"><span>🎯</span> AutoPilote</span>
-          <button onClick={() => { logout(); router.push('/'); }} className="text-sm text-muted">Déconnexion</button>
+        {/* Barre supérieure (cloche de notifications) */}
+        <div className="flex items-center justify-between md:justify-end gap-3 px-4 h-14 border-b border-white/[0.06] bg-ink-800/40 backdrop-blur-xl sticky top-0 z-30">
+          <span className="md:hidden font-bold flex items-center gap-2"><span>🎯</span> AutoPilote</span>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <button onClick={() => { logout(); router.push('/'); }} className="md:hidden text-sm text-muted">Quitter</button>
+          </div>
         </div>
         <div className="p-4 sm:p-8 max-w-6xl mx-auto">{children}</div>
       </main>

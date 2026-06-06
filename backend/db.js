@@ -132,6 +132,54 @@ function initSchema() {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+
+    -- Comptes réseaux sociaux connectés (Facebook/Instagram, LinkedIn)
+    CREATE TABLE IF NOT EXISTS social_accounts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      provider TEXT NOT NULL,            -- facebook | linkedin
+      account_name TEXT,
+      access_token TEXT,
+      expiry_date INTEGER,
+      connected_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    -- Publications réseaux sociaux (générées par le Créatif)
+    CREATE TABLE IF NOT EXISTS social_posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      provider TEXT NOT NULL,
+      content TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'publie', -- programme | publie
+      scheduled_at TEXT,
+      stats TEXT NOT NULL DEFAULT '{}',  -- JSON (likes, vues…)
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    -- Documents générés par les agents (devis, contenus, contrats…)
+    CREATE TABLE IF NOT EXISTS documents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      type TEXT NOT NULL DEFAULT 'document', -- type/classement
+      agent_id TEXT,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    -- Notifications du dashboard
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      message TEXT NOT NULL,
+      icon TEXT,
+      read INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
   `);
 
   migrate();
@@ -155,6 +203,13 @@ function migrate() {
   add('brief', 'TEXT');                  // brief libre de l'activité (contexte agents)
   add('vat_rate', 'REAL NOT NULL DEFAULT 20'); // taux de TVA par défaut
   add('prestations', "TEXT NOT NULL DEFAULT '[]'"); // prestations & tarifs (JSON)
+  add('whatsapp_number', 'TEXT');        // numéro WhatsApp lié au compte
+
+  // Colonne "channel" sur conversations (web | whatsapp)
+  const convCols = db.prepare('PRAGMA table_info(conversations)').all().map((c) => c.name);
+  if (!convCols.includes('channel')) {
+    db.exec("ALTER TABLE conversations ADD COLUMN channel TEXT NOT NULL DEFAULT 'web';");
+  }
 }
 
 module.exports = { db, initSchema, DB_PATH };

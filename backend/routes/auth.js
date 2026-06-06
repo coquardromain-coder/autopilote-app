@@ -79,7 +79,7 @@ router.patch('/me', authMiddleware, (req, res) => {
     `UPDATE users SET
        name = ?, company = ?, onboarded = ?,
        sector = ?, siret = ?, address = ?, logo = ?, brief = ?,
-       vat_rate = ?, prestations = ?
+       vat_rate = ?, prestations = ?, whatsapp_number = ?
      WHERE id = ?`
   ).run(
     b.name ?? user.name,
@@ -92,6 +92,7 @@ router.patch('/me', authMiddleware, (req, res) => {
     b.brief ?? user.brief,
     b.vat_rate != null ? Number(b.vat_rate) : user.vat_rate,
     prestations,
+    b.whatsapp_number ?? user.whatsapp_number,
     user.id
   );
 
@@ -119,6 +120,7 @@ function publicUser(u) {
     brief: u.brief || null,
     vat_rate: u.vat_rate != null ? u.vat_rate : 20,
     prestations,
+    whatsapp_number: u.whatsapp_number || null,
     created_at: u.created_at,
   };
 }

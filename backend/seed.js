@@ -31,7 +31,7 @@ const info = db
     `INSERT INTO users
        (email, password_hash, name, company, plan, onboarded,
         sector, siret, address, vat_rate, prestations, brief)
-     VALUES (?, ?, ?, ?, 'croissance', 1, 'artisan', ?, ?, 10, ?, ?)`
+     VALUES (?, ?, ?, ?, 'business', 1, 'artisan', ?, ?, 10, ?, ?)`
   )
   .run(
     EMAIL, hashPassword('demo1234'), 'Camille Démo', 'Démo SARL',
@@ -78,7 +78,7 @@ db.prepare(
 // Abonnement actif
 db.prepare(
   `INSERT INTO subscriptions (user_id, plan, price, status)
-   VALUES (?, 'croissance', 749, 'active')`
+   VALUES (?, 'business', 99, 'active')`
 ).run(uid);
 
 console.log('✅ Données de démonstration créées.');

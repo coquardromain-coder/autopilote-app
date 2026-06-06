@@ -12,7 +12,7 @@ export default function AgentsPage() {
   return (
     <div className="space-y-8">
       <div className="animate-fade-in-up">
-        <h1 className="text-3xl font-bold">Vos <span className="text-gradient">17 agents</span></h1>
+        <h1 className="text-3xl font-bold">Vos <span className="text-gradient">19 agents</span></h1>
         <p className="text-muted mt-1">Tous supervisés par le Directeur, l'orchestrateur central.</p>
       </div>
 

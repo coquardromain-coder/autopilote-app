@@ -11,10 +11,10 @@ router.use(authMiddleware);
 
 // Tarifs des packs (en euros / mois)
 const PLANS = {
-  essentiel: { label: 'Pack Essentiel', price: 297 },
-  croissance: { label: 'Pack Croissance', price: 749 },
-  elite: { label: 'Pack Elite', price: 1149 },
-  illimite: { label: 'Pack Illimité', price: 1490 },
+  starter: { label: 'Pack Starter', price: 49 },
+  business: { label: 'Pack Business', price: 99 },
+  elite: { label: 'Pack Elite', price: 199 },
+  agence: { label: 'Pack Agence', price: 399 },
 };
 
 // ─────────────────── FACTURES (Comptable) ───────────────────

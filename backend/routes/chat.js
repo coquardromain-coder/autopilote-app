@@ -8,9 +8,21 @@ const { authMiddleware } = require('../auth');
 const pilot = require('../agents/pilot');
 const { listAgents, getAgent } = require('../agents/registry');
 const { buildClientContext } = require('../context');
+const social = require('../social');
+const { notify } = require('../notify');
 
 const router = express.Router();
 router.use(authMiddleware);
+
+/** Classe un agent en "type de document" pour la bibliothèque. */
+function documentType(agentId) {
+  const map = {
+    deviseur: 'Devis', comptable: 'Comptabilité', creatif: 'Contenu',
+    referenceur: 'Marketing', juriste: 'Document juridique', chasseur: 'Prospection',
+    relance: 'Relance', assistance: 'Support', commercial: 'CRM',
+  };
+  return map[agentId] || 'Réponse agent';
+}
 
 /** GET /api/chat/agents — liste de tous les agents disponibles. */
 router.get('/agents', (req, res) => {
@@ -87,8 +99,30 @@ router.post('/message', async (req, res) => {
   const fullUser = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
   const clientContext = buildClientContext(fullUser);
 
+  // Commande de publication réseaux sociaux ("publie ce post sur LinkedIn")
+  // détectée par le Directeur → on confie la tâche au Créatif.
+  const socialCmd = social.interpretCommand(message);
+  const routeAgent = agentId || (socialCmd ? 'creatif' : null);
+
   // Le Directeur route et génère la réponse (avec contexte entreprise injecté)
-  const result = await pilot.handle(message, history, agentId || null, clientContext);
+  const result = await pilot.handle(message, history, routeAgent, clientContext);
+
+  // Si commande sociale : publication (réelle ou simulée) du contenu produit
+  if (socialCmd) {
+    const account = db.prepare('SELECT * FROM social_accounts WHERE user_id = ? AND provider = ?')
+      .get(req.user.id, socialCmd.provider);
+    if (account) {
+      const pub = await social.publish(socialCmd.provider, account, result.content);
+      const status = socialCmd.schedule ? 'programme' : 'publie';
+      db.prepare(
+        'INSERT INTO social_posts (user_id, provider, content, status, stats) VALUES (?, ?, ?, ?, ?)'
+      ).run(req.user.id, socialCmd.provider, result.content, status, JSON.stringify(pub.stats));
+      notify(req.user.id, `Post ${social.label(socialCmd.provider)} ${status === 'programme' ? 'programmé' : 'publié'} par le Créatif`, '📣');
+      result.content += `\n\n---\n✅ _${status === 'programme' ? 'Programmé' : 'Publié'} sur ${social.label(socialCmd.provider)}${pub.simulated ? ' (mode simulation)' : ''}._`;
+    } else {
+      result.content += `\n\n---\n⚠️ _Connectez votre compte ${social.label(socialCmd.provider)} dans « Intégrations » pour publier._`;
+    }
+  }
 
   // Enregistre la réponse de l'agent
   db.prepare(
@@ -100,7 +134,26 @@ router.post('/message', async (req, res) => {
     'INSERT INTO activity_logs (user_id, agent_id, action) VALUES (?, ?, ?)'
   ).run(req.user.id, result.agentId, 'message');
 
+  // Auto-enregistrement dans la bibliothèque "Mes documents" (canal web)
+  if (conv.channel !== 'whatsapp') {
+    db.prepare(
+      'INSERT INTO documents (user_id, type, agent_id, title, content) VALUES (?, ?, ?, ?, ?)'
+    ).run(req.user.id, documentType(result.agentId), result.agentId, message.slice(0, 60), result.content);
+  }
+
   res.json({ conversationId: conv.id, reply: result });
+});
+
+/** GET /api/chat/search?q= — recherche dans les conversations et messages. */
+router.get('/search', (req, res) => {
+  const q = `%${(req.query.q || '').trim()}%`;
+  const rows = db.prepare(
+    `SELECT DISTINCT c.* FROM conversations c
+     LEFT JOIN messages m ON m.conversation_id = c.id
+     WHERE c.user_id = ? AND (c.title LIKE ? OR m.content LIKE ?)
+     ORDER BY c.created_at DESC LIMIT 50`
+  ).all(req.user.id, q, q);
+  res.json({ conversations: rows });
 });
 
 /** DELETE /api/chat/conversations/:id — supprime une conversation. */
