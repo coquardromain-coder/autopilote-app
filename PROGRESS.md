@@ -223,6 +223,36 @@ d'affaires » → synthèse, « crée un devis » → message de configuration) 
 
 ---
 
+## 🚀 PHASE 9 — Connecteurs gratuits & open source + système unifié ✅
+
+**Système unifié (Partie 10)** : `backend/connectors/index.js` (registre de 14 connecteurs)
++ `backend/connectors/store.js` (**chiffrement AES-256-GCM** des identifiants par client)
++ `routes/connectors.js` (`GET /api/connectors` catalogue+statut, `POST /:id` sauvegarde+test
+auto, `POST /:id/test`, `DELETE`). Page **Intégrations redesignée** : grille 3 colonnes,
+statut ⚫🟡🟢🔴, modal de configuration, glow vert quand connecté. **Onboarding** : 3 connecteurs
+recommandés selon le secteur (optionnel, configurable plus tard).
+
+Intégrations créées (mode simulation si non configuré) :
+1. **OpenSign** (`integrations/opensign.js`) — signature électronique (devis/contrats/factures).
+2. **WhatsApp Cloud Meta** (`integrations/whatsapp.js`) — remplace Twilio, webhook verify GET +
+   réception POST, 10 000 msg/mois gratuits. Directeur/Assistance/Relance/Commercial.
+3. **Fonoster** (`integrations/fonoster.js`) — appels + SMS open source. Vocal/Relance/Commercial.
+4. **DocuSeal** (`integrations/docuseal.js`) — signature alternative auto-hébergée.
+5. **Google Search Console** (`integrations/searchconsole.js`) — SEO réel (OAuth Google).
+6. **Google Analytics 4** (`integrations/analytics.js`) — trafic & conversions (OAuth Google).
+7. **Google Business Profile** (`integrations/googlebusiness.js`) — avis & posts (OAuth Google).
+8. **Hunter.io** (`integrations/hunterio.js`) — recherche d'emails (free tier). Chasseur.
+9. **WordPress** enrichi — catégories, tags, médias, programmation, mise à jour, stats.
+
+**Agents** : offre de **signature électronique** automatique (Deviseur/Juriste/Comptable),
+message uniforme « Pour [action], connectez [Service]… Moins de 2 minutes ✓ » si non configuré.
+Chiffrement AES-256 des clés (`ENCRYPTION_KEY`).
+
+**Validé** : build OK (18 routes) ; 14 connecteurs au catalogue avec statut ; sauvegarde chiffrée
++ test réel (ex. Hunter.io clé invalide → statut 🔴 erreur) ; grille et modal rendus en dark premium.
+
+---
+
 ## 📝 Notes & limitations connues
 
 - **Mode IA** : sans `ANTHROPIC_API_KEY`, les agents répondent en *mode démonstration*
