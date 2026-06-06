@@ -64,9 +64,10 @@ function routeIntent(message, forcedAgentId = null) {
  * @param {string} message - dernier message de l'utilisateur
  * @param {Array} history - historique [{role, content}]
  * @param {string|null} forcedAgentId - agent imposé (depuis l'UI)
+ * @param {string} clientContext - contexte entreprise à injecter (secteur, prestations…)
  * @returns {Promise<{agentId, agentName, content, routedBy}>}
  */
-async function handle(message, history = [], forcedAgentId = null) {
+async function handle(message, history = [], forcedAgentId = null, clientContext = '') {
   const agentId = routeIntent(message, forcedAgentId);
   const agent = getAgent(agentId);
 
@@ -76,7 +77,13 @@ async function handle(message, history = [], forcedAgentId = null) {
     { role: 'user', content: message },
   ];
 
-  const content = await askAgent(agent.systemPrompt, messages);
+  // Le contexte de l'entreprise du client est ajouté au prompt système
+  // pour personnaliser automatiquement la réponse de l'agent.
+  const systemPrompt = clientContext
+    ? `${agent.systemPrompt}\n${clientContext}`
+    : agent.systemPrompt;
+
+  const content = await askAgent(systemPrompt, messages);
 
   return {
     agentId: agent.id,

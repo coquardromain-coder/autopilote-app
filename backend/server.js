@@ -77,6 +77,7 @@ app.use('/auth', require('./routes/googleAuth'));
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/google', require('./routes/google'));
+app.use('/api/config', require('./routes/config'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/crm', require('./routes/crm'));
 app.use('/api/billing', require('./routes/billing'));

@@ -20,13 +20,25 @@ if (existing) {
   console.log('Ancien compte de démo supprimé.');
 }
 
-// Crée l'utilisateur de démonstration (onboarding déjà terminé)
+// Crée l'utilisateur de démonstration (onboarding déjà terminé, profil complet)
+const prestationsDemo = JSON.stringify([
+  { label: 'Dépannage plomberie', price: 90, unit: 'heure' },
+  { label: 'Installation chauffe-eau', price: 650, unit: 'forfait' },
+  { label: 'Rénovation salle de bain', price: 4500, unit: 'forfait' },
+]);
 const info = db
   .prepare(
-    `INSERT INTO users (email, password_hash, name, company, plan, onboarded)
-     VALUES (?, ?, ?, ?, 'croissance', 1)`
+    `INSERT INTO users
+       (email, password_hash, name, company, plan, onboarded,
+        sector, siret, address, vat_rate, prestations, brief)
+     VALUES (?, ?, ?, ?, 'croissance', 1, 'artisan', ?, ?, 10, ?, ?)`
   )
-  .run(EMAIL, hashPassword('demo1234'), 'Camille Démo', 'Démo SARL');
+  .run(
+    EMAIL, hashPassword('demo1234'), 'Camille Démo', 'Démo SARL',
+    '12345678900012', '10 rue de Paris, 75001 Paris', prestationsDemo,
+    'Plombier-chauffagiste à Paris, dépannage 7j/7 et rénovation de salle de bain. ' +
+    'Clientèle de particuliers et syndics. Positionnement réactif et de confiance.'
+  );
 const uid = info.lastInsertRowid;
 
 // Contacts CRM

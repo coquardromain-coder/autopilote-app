@@ -7,6 +7,7 @@ const { db } = require('../db');
 const { authMiddleware } = require('../auth');
 const pilot = require('../agents/pilot');
 const { listAgents, getAgent } = require('../agents/registry');
+const { buildClientContext } = require('../context');
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -82,8 +83,12 @@ router.post('/message', async (req, res) => {
     'INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)'
   ).run(conv.id, 'user', message);
 
-  // Pilot route et génère la réponse
-  const result = await pilot.handle(message, history, agentId || null);
+  // Charge le profil complet de l'entreprise pour personnaliser la réponse
+  const fullUser = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  const clientContext = buildClientContext(fullUser);
+
+  // Pilot route et génère la réponse (avec contexte entreprise injecté)
+  const result = await pilot.handle(message, history, agentId || null, clientContext);
 
   // Enregistre la réponse de l'agent
   db.prepare(

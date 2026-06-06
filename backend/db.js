@@ -107,6 +107,8 @@ function initSchema() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
+    -- (colonnes entreprise ajoutées par migration plus bas)
+
     -- Connexions Google OAuth (Gmail, Calendar, Drive) par utilisateur
     CREATE TABLE IF NOT EXISTS google_accounts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -131,6 +133,28 @@ function initSchema() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
   `);
+
+  migrate();
+}
+
+/**
+ * Migration légère : ajoute les colonnes "entreprise" à la table users
+ * si elles n'existent pas encore (préserve les données existantes).
+ */
+function migrate() {
+  const cols = db.prepare('PRAGMA table_info(users)').all().map((c) => c.name);
+  const add = (name, def) => {
+    if (!cols.includes(name)) {
+      db.exec(`ALTER TABLE users ADD COLUMN ${name} ${def};`);
+    }
+  };
+  add('sector', 'TEXT');                 // identifiant du secteur d'activité
+  add('siret', 'TEXT');                  // numéro SIRET
+  add('address', 'TEXT');                // adresse postale
+  add('logo', 'TEXT');                   // logo (URL ou data URI)
+  add('brief', 'TEXT');                  // brief libre de l'activité (contexte agents)
+  add('vat_rate', 'REAL NOT NULL DEFAULT 20'); // taux de TVA par défaut
+  add('prestations', "TEXT NOT NULL DEFAULT '[]'"); // prestations & tarifs (JSON)
 }
 
 module.exports = { db, initSchema, DB_PATH };

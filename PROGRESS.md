@@ -58,6 +58,49 @@
 - ✅ CRM, factures, devis, abonnement simulé, analytics opérationnels.
 - ✅ Build Next.js de production réussi (aucune erreur, aucune erreur console).
 
+---
+
+## 🚀 PHASE 5 — Personnalisation métier & expérience premium ✅
+
+Ajoutée après les 4 phases initiales.
+
+### Étape 1 — Prompts experts des agents ✅
+Chaque agent (`backend/agents/registry.js`) dispose d'un **prompt système expert** :
+socle commun (français, ton pro & accessible, expertise métier, adaptation au secteur,
+cadre légal FR) + spécialisation approfondie (méthodes, vocabulaire, bonnes pratiques)
+pour Pilot, Léa, Max, Sofia, Clara, Tom, Alex, Hub, Vox, Manon, Manon D. (+ 8 modules).
+
+### Étape 2 — Secteurs d'activité ✅
+`backend/sectors.js` : **8 secteurs préconfigurés** (Traiteur, Restaurant, Artisan,
+Commerce, Profession libérale, Immobilier, Beauté/Bien-être, Générique). Chacun fournit
+contexte métier, vocabulaire, types de clients, prestations courantes et saisonnalité.
+
+### Étape 3 — Modèles de documents ✅
+`backend/templates.js` : devis, **facture (mentions légales FR + TVA)**, email de
+prospection (3 variantes/secteur), relance (J+3 / J+7 / J+15), email de bienvenue,
+compte-rendu de réunion. Rendus pré-remplis avec les infos de l'entreprise.
+
+### Étape 4 — Onboarding guidé 5 étapes ✅
+`frontend/app/onboarding` (design dark premium) :
+1. Infos entreprise (nom, SIRET, adresse, logo) · 2. Secteur · 3. Prestations & tarifs
+· 4. Brief agents · 5. Google Workspace (optionnel) → dashboard.
+
+### Étape 5 — Paramètres enrichis ✅
+`frontend/app/dashboard/settings` : sections Mon entreprise, Mes prestations,
+Contexte agents (secteur + brief), Modèles de documents (prévisualisation).
+
+### 🔌 Injection automatique du contexte
+`backend/context.js` construit un bloc « contexte entreprise » (secteur + infos légales
++ prestations + brief) injecté dans le prompt de chaque agent à chaque message
+(`routes/chat.js` → `agents/pilot.js`). Les réponses sont ainsi personnalisées sans
+que le client ait à répéter son contexte. Migration BD non destructive (`db.js`).
+
+**Validé** : agent Manon D. chiffre un devis avec les vraies prestations et la TVA du
+client ; prévisualisation des modèles pré-remplie ; onboarding et paramètres rendus en
+dark premium ; build de production OK.
+
+---
+
 ## 📝 Notes & limitations connues
 
 - **Mode IA** : sans `ANTHROPIC_API_KEY`, les agents répondent en *mode démonstration*
