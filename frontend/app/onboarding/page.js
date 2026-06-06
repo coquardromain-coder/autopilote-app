@@ -27,6 +27,10 @@ export default function OnboardingPage() {
   const [vatRate, setVatRate] = useState(20);
   const [prestations, setPrestations] = useState([{ label: '', price: '', unit: '' }]);
   const [brief, setBrief] = useState('');
+  // Dolibarr (étape 5)
+  const [doli, setDoli] = useState({ url: '', login: '', password: '' });
+  const [doliTest, setDoliTest] = useState(null);
+  const [doliTesting, setDoliTesting] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.push('/login');
@@ -71,6 +75,16 @@ export default function OnboardingPage() {
       alert('Erreur : ' + err.message);
       setSubmitting(false);
     }
+  }
+
+  async function testDolibarr() {
+    setDoliTesting(true); setDoliTest(null);
+    try {
+      const d = await api('/api/dolibarr/config', { method: 'POST', body: doli });
+      if (d.tested) setDoliTest(d.success ? { ok: true, text: `Connecté ✓ (Dolibarr ${d.version})` } : { ok: false, text: d.error });
+      else setDoliTest({ ok: true, text: 'Enregistré.' });
+    } catch (err) { setDoliTest({ ok: false, text: err.message }); }
+    finally { setDoliTesting(false); }
   }
 
   function connectGoogle() {
@@ -183,18 +197,38 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Étape 5 — Google */}
+        {/* Étape 5 — Connectez vos outils */}
         {step === 5 && (
           <div className="animate-fade-in-up">
-            <h2 className="text-lg font-semibold">Connecter Google Workspace</h2>
-            <p className="text-muted text-sm mb-4">Optionnel — connectez Gmail, Calendar et Drive pour que vos agents envoient des emails, créent des rendez-vous et gèrent vos documents.</p>
-            <div className="glass rounded-xl p-4 flex items-center gap-3">
-              <div className="text-2xl">🔗</div>
-              <div className="text-sm text-muted">Vous pourrez aussi le faire plus tard depuis « Intégrations Google ».</div>
-            </div>
-            <button onClick={connectGoogle} disabled={submitting} className="btn-secondary w-full mt-4">
-              <span className="text-lg">🔗</span> Connecter Google maintenant
+            <h2 className="text-lg font-semibold">Connectez vos outils</h2>
+            <p className="text-muted text-sm mb-4">Optionnel — vous pourrez aussi le faire plus tard depuis « Intégrations ».</p>
+
+            {/* Google */}
+            <button onClick={connectGoogle} disabled={submitting} className="btn-secondary w-full">
+              <span className="text-lg">🔗</span> Connecter Google Workspace (Gmail, Calendar, Drive)
             </button>
+
+            {/* Dolibarr */}
+            <div className="glass rounded-xl p-4 mt-4">
+              <div className="flex items-center gap-2 font-medium"><span className="text-xl">📒</span> Dolibarr — votre ERP et comptabilité</div>
+              <p className="text-xs text-muted mt-1 mb-3">Connectez Dolibarr pour que vos agents créent devis et factures automatiquement et exportent vers EBP chaque mois.</p>
+              <div className="space-y-2">
+                <input value={doli.url} onChange={(e) => setDoli({ ...doli, url: e.target.value })} className="input text-sm py-2" placeholder="URL (https://dolibarr.famcofinances.com)" />
+                <div className="flex gap-2">
+                  <input value={doli.login} onChange={(e) => setDoli({ ...doli, login: e.target.value })} className="input text-sm py-2" placeholder="Login" />
+                  <input type="password" value={doli.password} onChange={(e) => setDoli({ ...doli, password: e.target.value })} className="input text-sm py-2" placeholder="Mot de passe" />
+                </div>
+                <button onClick={testDolibarr} disabled={doliTesting || !doli.url} className="btn-secondary w-full text-sm">
+                  {doliTesting ? 'Test…' : 'Tester la connexion'}
+                </button>
+                {doliTest && (
+                  <p className={`text-xs flex items-center gap-1 ${doliTest.ok ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <span className={`w-2 h-2 rounded-full ${doliTest.ok ? 'bg-emerald-400' : 'bg-red-400'}`} /> {doliTest.text}
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div className="mt-6 flex gap-3">
               <button onClick={prev} className="btn-secondary flex-1">Retour</button>
               <button onClick={() => saveAll(true)} disabled={submitting} className="btn-primary flex-1">

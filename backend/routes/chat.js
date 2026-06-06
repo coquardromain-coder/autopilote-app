@@ -9,6 +9,7 @@ const pilot = require('../agents/pilot');
 const { listAgents, getAgent } = require('../agents/registry');
 const { buildClientContext } = require('../context');
 const social = require('../social');
+const dolibarrAgent = require('../integrations/dolibarrAgent');
 const { notify } = require('../notify');
 
 const router = express.Router();
@@ -99,13 +100,18 @@ router.post('/message', async (req, res) => {
   const fullUser = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
   const clientContext = buildClientContext(fullUser);
 
-  // Commande de publication réseaux sociaux ("publie ce post sur LinkedIn")
-  // détectée par le Directeur → on confie la tâche au Créatif.
-  const socialCmd = social.interpretCommand(message);
-  const routeAgent = agentId || (socialCmd ? 'creatif' : null);
+  // Détection des commandes spéciales (le Directeur confie au bon agent)
+  const doliCmd = dolibarrAgent.interpret(message);          // ERP Dolibarr
+  const socialCmd = social.interpretCommand(message);        // réseaux sociaux
+  const routeAgent = agentId || doliCmd?.agent || (socialCmd ? 'creatif' : null);
 
   // Le Directeur route et génère la réponse (avec contexte entreprise injecté)
   const result = await pilot.handle(message, history, routeAgent, clientContext);
+
+  // Commande Dolibarr : exécution (création devis, impayées, EBP, CA, prospect…)
+  if (doliCmd) {
+    result.content += await dolibarrAgent.perform(fullUser, doliCmd.action, result.content);
+  }
 
   // Si commande sociale : publication (réelle ou simulée) du contenu produit
   if (socialCmd) {

@@ -179,6 +179,50 @@ design dark premium conservé ; tout en français ; modes simulation actifs sans
 
 ---
 
+## 🚀 PHASE 8 — Intégration Dolibarr ERP ✅
+
+### Partie 1 — Déploiement ✅
+`docker-compose.dolibarr.yml` (image `tuxgasy/dolibarr` + MySQL 8) + `.env.dolibarr.example`
+(variables `DOLIBARR_DB_PASSWORD`, `DOLIBARR_DB_ROOT_PASSWORD`, `DOLIBARR_ADMIN_PASSWORD`,
+`DOLIBARR_COMPANY_NAME`) et procédure Coolify documentée.
+
+### Partie 2 — Connecteur ✅
+`backend/integrations/dolibarr.js` (API REST Dolibarr via DOLAPIKEY) : `getDolibarrToken`,
+`testConnection`, clients (`getClients/createClient/updateClient`), devis (`getDevis/
+createDevis/sendDevis`), factures (`getFactures/createFacture/getFacturesImpayees`),
+produits (`getProduits/createProduit`), compta (`getEcritures/exportEBP`), banque (`getBanque`).
+Config par client (URL, login, mot de passe, clé API) → `routes/dolibarr.js` avec **test
+automatique** (`GET /version`) à la sauvegarde. Mode simulation si non configuré.
+
+### Partie 3 — Agents connectés ✅
+`backend/integrations/dolibarrAgent.js` + `chat.js` : le Directeur détecte les intentions
+(robuste aux accents) et confie à l'agent : **Deviseur** (« crée un devis » → produits Dolibarr
++ création + envoi), **Comptable** (« factures impayées », « export EBP »), **Commercial**
+(« ajoute ce prospect »), **Analyste** (« chiffre d'affaires »). Message de configuration si
+Dolibarr non connecté.
+
+### Partie 4 — Interface Gestion ✅
+Page `dashboard/gestion` : widgets CA du mois, factures impayées, devis en attente,
+bouton « Ouvrir Dolibarr » et « Export EBP ». Section Dolibarr dans Intégrations (config + test).
+
+### Partie 5 — Export EBP automatique ✅
+`backend/scheduler.js` : le 1er du mois à 8h, génère l'export EBP du mois précédent
+(`dolibarr_export_EBP_YYYY-MM.csv`), l'envoie à l'email configuré (Comptabilité) et le
+journalise dans « Mes documents ».
+
+### Partie 6 — Onboarding ✅
+Étape « Connectez vos outils » : carte Dolibarr (URL, login, mot de passe, **Tester la
+connexion** avec statut vert/rouge).
+
+**Validé** : build OK (18 routes) ; endpoints Dolibarr testés en simulation (status, widgets
+CA/impayées/devis, export EBP) ; commandes agents (« factures impayées » → tableau, « chiffre
+d'affaires » → synthèse, « crée un devis » → message de configuration) ; scheduler démarré.
+
+> Config Dolibarr : **par client** dans l'UI (pas de variable d'env backend). Le déploiement
+> Dolibarr utilise les variables de `.env.dolibarr.example` côté Coolify.
+
+---
+
 ## 📝 Notes & limitations connues
 
 - **Mode IA** : sans `ANTHROPIC_API_KEY`, les agents répondent en *mode démonstration*

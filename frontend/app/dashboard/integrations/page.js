@@ -113,6 +113,66 @@ export default function IntegrationsPage() {
       {/* WordPress (Référenceur) */}
       <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-gradient pt-2">WordPress — publication par le Référenceur</h2>
       <WordPressSection />
+
+      {/* Dolibarr (ERP / comptabilité) */}
+      <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-gradient pt-2">Dolibarr — ERP & comptabilité</h2>
+      <DolibarrSection />
+    </div>
+  );
+}
+
+/** Section Dolibarr : configuration + test de connexion. */
+function DolibarrSection() {
+  const [form, setForm] = useState({ url: '', login: '', apiKey: '', password: '', compta_email: '' });
+  const [status, setStatus] = useState(null);
+  const [test, setTest] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  function load() {
+    api('/api/dolibarr/status').then((d) => {
+      setStatus(d);
+      setForm((f) => ({ ...f, url: d.url || '', login: d.login || '', compta_email: d.compta_email || '' }));
+    }).catch(() => {});
+  }
+  useEffect(load, []);
+
+  const update = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+
+  async function saveAndTest(e) {
+    e.preventDefault();
+    setSaving(true); setTest(null);
+    try {
+      const d = await api('/api/dolibarr/config', { method: 'POST', body: form });
+      if (d.tested) setTest(d.success ? { ok: true, text: `Connecté ✓ (Dolibarr ${d.version})` } : { ok: false, text: d.error });
+      else setTest({ ok: true, text: 'Configuration enregistrée.' });
+      load();
+    } catch (err) { setTest({ ok: false, text: err.message }); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <div className="glass-card p-6">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-xl">📒</span>
+        <h3 className="font-semibold">Connectez votre Dolibarr</h3>
+        {status && (
+          <span className={`chip ${status.configured ? '!text-emerald-300 !border-emerald-500/30 !bg-emerald-500/10' : '!text-amber-300 !border-amber-500/30 !bg-amber-500/10'}`}>
+            {status.configured ? 'Connecté' : 'Non connecté'}
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-muted mb-4">
+        Permet à vos agents de créer devis et factures, de présenter vos impayés et d'exporter vers EBP.
+      </p>
+      <form onSubmit={saveAndTest} className="grid sm:grid-cols-2 gap-3">
+        <input value={form.url} onChange={update('url')} className="input sm:col-span-2" placeholder="URL Dolibarr (https://dolibarr.famcofinances.com)" />
+        <input value={form.login} onChange={update('login')} className="input" placeholder="Login administrateur" />
+        <input type="password" value={form.password} onChange={update('password')} className="input" placeholder="Mot de passe (optionnel si clé API)" />
+        <input value={form.apiKey} onChange={update('apiKey')} className="input sm:col-span-2" placeholder="Clé API Dolibarr (DOLAPIKEY)" />
+        <input value={form.compta_email} onChange={update('compta_email')} className="input sm:col-span-2" placeholder="Email export comptable mensuel (EBP)" />
+        <button disabled={saving} className="btn-primary sm:col-span-2">{saving ? 'Test en cours…' : 'Enregistrer & tester la connexion'}</button>
+        {test && <p className={`sm:col-span-2 text-sm ${test.ok ? 'text-emerald-400' : 'text-red-400'}`}>{test.ok ? '✅ ' : '⚠️ '}{test.text}</p>}
+      </form>
     </div>
   );
 }

@@ -16,6 +16,7 @@ const NAV = [
   { href: '/dashboard/agents', label: 'Mes 19 agents', icon: '🤖' },
   { href: '/dashboard/crm', label: 'CRM — Contacts', icon: '🤝' },
   { href: '/dashboard/billing', label: 'Facturation & Devis', icon: '🧾' },
+  { href: '/dashboard/gestion', label: 'Gestion (Dolibarr)', icon: '📒' },
   { href: '/dashboard/documents', label: 'Mes documents', icon: '📁' },
   { href: '/dashboard/integrations', label: 'Intégrations', icon: '🔗' },
   { href: '/dashboard/settings', label: 'Paramètres', icon: '⚙️' },

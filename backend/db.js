@@ -204,6 +204,11 @@ function migrate() {
   add('vat_rate', 'REAL NOT NULL DEFAULT 20'); // taux de TVA par défaut
   add('prestations', "TEXT NOT NULL DEFAULT '[]'"); // prestations & tarifs (JSON)
   add('whatsapp_number', 'TEXT');        // numéro WhatsApp lié au compte
+  add('dolibarr_url', 'TEXT');           // URL de l'instance Dolibarr du client
+  add('dolibarr_login', 'TEXT');         // login admin Dolibarr
+  add('dolibarr_password', 'TEXT');      // mot de passe Dolibarr
+  add('dolibarr_apikey', 'TEXT');        // clé API Dolibarr (DOLAPIKEY)
+  add('compta_email', 'TEXT');           // email pour l'export EBP mensuel
 
   // Colonne "channel" sur conversations (web | whatsapp)
   const convCols = db.prepare('PRAGMA table_info(conversations)').all().map((c) => c.name);

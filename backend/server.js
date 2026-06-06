@@ -86,6 +86,7 @@ app.use('/api/social', require('./routes/social'));
 app.use('/api/content', require('./routes/content'));
 app.use('/api/documents', require('./routes/documents'));
 app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/dolibarr', require('./routes/dolibarr'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/crm', require('./routes/crm'));
 app.use('/api/billing', require('./routes/billing'));
@@ -110,4 +111,6 @@ app.listen(PORT, () => {
   console.log(`  Google  : ${googleLib.isConfigured() ? 'configuré (Gmail, Calendar, Drive)' : 'non configuré'}`);
   console.log(`  CORS    : ${ALLOWED_ORIGINS.join(', ')}`);
   console.log('────────────────────────────────────────────');
+  // Démarre le planificateur d'export EBP mensuel
+  try { require('./scheduler').start(); } catch (e) { console.error('[Scheduler]', e.message); }
 });
