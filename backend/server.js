@@ -87,6 +87,7 @@ app.use('/api/content', require('./routes/content'));
 app.use('/api/documents', require('./routes/documents'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/dolibarr', require('./routes/dolibarr'));
+app.use('/api/connectors', require('./routes/connectors'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/crm', require('./routes/crm'));
 app.use('/api/billing', require('./routes/billing'));

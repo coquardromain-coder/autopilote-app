@@ -170,6 +170,18 @@ function initSchema() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
+    -- Configurations de connecteurs (chiffrées AES-256) par utilisateur
+    CREATE TABLE IF NOT EXISTS connector_configs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      connector TEXT NOT NULL,
+      data TEXT NOT NULL,                -- JSON chiffré (iv.tag.cipher)
+      status TEXT NOT NULL DEFAULT 'connecte',
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(user_id, connector),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
     -- Notifications du dashboard
     CREATE TABLE IF NOT EXISTS notifications (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -33,6 +33,18 @@ export const AGENTS = [
   { id: 'assistant', name: 'Assistant', role: 'E-commerce', category: 'module', avatar: '🛒' },
 ];
 
+// Connecteurs prioritaires recommandés selon le secteur (onboarding)
+export const SECTOR_CONNECTORS = {
+  traiteur: ['dolibarr', 'whatsapp', 'stripe'],
+  restaurant: ['googlebusiness', 'meta', 'whatsapp'],
+  artisan: ['dolibarr', 'stripe', 'whatsapp'],
+  commerce: ['meta', 'googlebusiness', 'stripe'],
+  liberal: ['dolibarr', 'stripe', 'opensign'],
+  immobilier: ['opensign', 'dolibarr', 'whatsapp'],
+  beaute: ['googlebusiness', 'meta', 'whatsapp'],
+  generique: ['dolibarr', 'whatsapp', 'stripe'],
+};
+
 // Libellés lisibles des catégories
 export const CATEGORY_LABELS = {
   orchestrateur: 'Orchestrateur',

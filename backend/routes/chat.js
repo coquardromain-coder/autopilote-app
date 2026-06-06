@@ -10,7 +10,21 @@ const { listAgents, getAgent } = require('../agents/registry');
 const { buildClientContext } = require('../context');
 const social = require('../social');
 const dolibarrAgent = require('../integrations/dolibarrAgent');
+const store = require('../connectors/store');
+const opensign = require('../integrations/opensign');
+const docuseal = require('../integrations/docuseal');
 const { notify } = require('../notify');
+
+/** Propose la signature électronique pour les documents signables. */
+function signatureOffer(userId, agentId, content) {
+  if (!['deviseur', 'juriste', 'comptable'].includes(agentId)) return '';
+  if ((content || '').length < 180) return ''; // évite de proposer sur une simple question
+  const signOk = opensign.isConfigured(store.getConfig(userId, 'opensign')) || docuseal.isConfigured(store.getConfig(userId, 'docuseal'));
+  if (signOk) {
+    return '\n\n---\n✍️ _Souhaitez-vous l\'envoyer pour **signature électronique** ? Répondez « oui, fais signer »._';
+  }
+  return '\n\n---\n✍️ _Pour faire signer ce document, connectez la Signature électronique dans Paramètres → Intégrations → Signature électronique. Moins de 2 minutes ✓_';
+}
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -129,6 +143,9 @@ router.post('/message', async (req, res) => {
       result.content += `\n\n---\n⚠️ _Connectez votre compte ${social.label(socialCmd.provider)} dans « Intégrations » pour publier._`;
     }
   }
+
+  // Offre de signature électronique (Deviseur, Juriste, Comptable)
+  result.content += signatureOffer(req.user.id, result.agentId, result.content);
 
   // Enregistre la réponse de l'agent
   db.prepare(

@@ -1,133 +1,115 @@
 /**
- * Routes WhatsApp — le Directeur accessible via WhatsApp (Twilio).
+ * Routes WhatsApp — via l'API Meta WhatsApp Cloud (gratuit).
  *
- * - POST /api/whatsapp/webhook : reçoit les messages entrants (public, Twilio)
+ * - GET  /api/whatsapp/webhook : vérification Meta (hub.challenge)
+ * - POST /api/whatsapp/webhook : réception des messages entrants (public)
  * - POST /api/whatsapp/send    : envoi manuel (authentifié)
- * - GET  /api/whatsapp/conversations : historique WhatsApp (authentifié)
+ * - GET  /api/whatsapp/conversations / /status : (authentifié)
  */
 const express = require('express');
 const { db } = require('../db');
 const { authMiddleware } = require('../auth');
 const pilot = require('../agents/pilot');
 const { buildClientContext } = require('../context');
-const wa = require('../whatsapp');
+const wa = require('../integrations/whatsapp');
+const store = require('../connectors/store');
 const { notify } = require('../notify');
 
 const router = express.Router();
 
-/** Garde uniquement les chiffres d'un numéro (pour comparaison). */
-const digits = (s) => String(s || '').replace(/\D/g, '');
+/** Récupère la config WhatsApp (déchiffrée) d'un utilisateur. */
+function waConfig(userId) { return store.getConfig(userId, 'whatsapp'); }
 
-/** Trouve l'utilisateur lié à un numéro WhatsApp entrant. */
-function findUserByWhatsApp(from) {
-  const fromDigits = digits(from);
-  const users = db.prepare('SELECT * FROM users WHERE whatsapp_number IS NOT NULL').all();
-  return users.find((u) => fromDigits.endsWith(digits(u.whatsapp_number)) || digits(u.whatsapp_number).endsWith(fromDigits)) || null;
+/** Trouve l'utilisateur dont la config WhatsApp correspond au phone_number_id. */
+function findUserByPhoneNumberId(pnid) {
+  const rows = db.prepare("SELECT user_id FROM connector_configs WHERE connector = 'whatsapp'").all();
+  for (const r of rows) {
+    const cfg = store.getConfig(r.user_id, 'whatsapp');
+    if (cfg.phoneNumberId && String(cfg.phoneNumberId) === String(pnid)) return r.user_id;
+  }
+  return null;
 }
 
-/** Récupère (ou crée) la conversation WhatsApp d'un utilisateur. */
 function getWhatsAppConversation(userId) {
-  let conv = db.prepare(
-    "SELECT * FROM conversations WHERE user_id = ? AND channel = 'whatsapp' ORDER BY created_at DESC LIMIT 1"
-  ).get(userId);
+  let conv = db.prepare("SELECT * FROM conversations WHERE user_id = ? AND channel = 'whatsapp' ORDER BY created_at DESC LIMIT 1").get(userId);
   if (!conv) {
-    const info = db.prepare(
-      "INSERT INTO conversations (user_id, agent_id, title, channel) VALUES (?, 'directeur', 'WhatsApp', 'whatsapp')"
-    ).run(userId);
+    const info = db.prepare("INSERT INTO conversations (user_id, agent_id, title, channel) VALUES (?, 'directeur', 'WhatsApp', 'whatsapp')").run(userId);
     conv = db.prepare('SELECT * FROM conversations WHERE id = ?').get(info.lastInsertRowid);
   }
   return conv;
 }
 
-/**
- * POST /api/whatsapp/webhook — réception d'un message WhatsApp entrant.
- * Twilio envoie du x-www-form-urlencoded : From, Body, NumMedia, MediaUrl0…
- */
+/** GET /api/whatsapp/webhook — vérification Meta (handshake). */
+router.get('/webhook', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+  // Accepte si le verify_token correspond à l'env ou à un token client stocké
+  const envToken = process.env.WHATSAPP_VERIFY_TOKEN;
+  let ok = mode === 'subscribe' && token && (token === envToken);
+  if (!ok && token) {
+    const rows = db.prepare("SELECT user_id FROM connector_configs WHERE connector = 'whatsapp'").all();
+    ok = rows.some((r) => store.getConfig(r.user_id, 'whatsapp').verifyToken === token);
+  }
+  if (ok) return res.status(200).send(challenge);
+  res.sendStatus(403);
+});
+
+/** POST /api/whatsapp/webhook — message entrant. */
 router.post('/webhook', async (req, res) => {
   try {
-    const b = req.body || {};
-    const from = b.From || b.from;
-    let text = b.Body || b.body || '';
-    const numMedia = parseInt(b.NumMedia || '0', 10);
-    const mediaType = b.MediaContentType0 || '';
+    const value = req.body?.entry?.[0]?.changes?.[0]?.value;
+    const parsed = wa.parseWebhook(req.body);
+    const pnid = value?.metadata?.phone_number_id;
+    if (!parsed || !pnid) return res.sendStatus(200);
 
-    // Message vocal → transcription
-    if (numMedia > 0 && mediaType.startsWith('audio')) {
-      text = await wa.transcribeVoice(b.MediaUrl0);
-    }
+    const userId = findUserByPhoneNumberId(pnid);
+    if (!userId) return res.sendStatus(200);
 
-    const user = findUserByWhatsApp(from);
-    if (!user) {
-      // Numéro non reconnu : on répond une invitation à se connecter
-      await wa.sendMessage(from, "Bonjour ! Ce numéro n'est associé à aucun compte AutoPilote. Renseignez votre numéro WhatsApp dans votre espace pour discuter avec le Directeur.");
-      return res.type('text/xml').send('<Response/>');
-    }
+    const config = waConfig(userId);
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    const conv = getWhatsAppConversation(userId);
+    const history = db.prepare('SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY created_at ASC LIMIT 20').all(conv.id);
 
-    const conv = getWhatsAppConversation(user.id);
+    db.prepare('INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)').run(conv.id, 'user', parsed.text);
 
-    // Historique récent
-    const history = db.prepare(
-      'SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY created_at ASC LIMIT 20'
-    ).all(conv.id);
+    const result = await pilot.handle(parsed.text, history, null, buildClientContext(user));
+    db.prepare('INSERT INTO messages (conversation_id, role, agent_id, content) VALUES (?, ?, ?, ?)').run(conv.id, 'assistant', result.agentId, result.content);
+    db.prepare('INSERT INTO activity_logs (user_id, agent_id, action) VALUES (?, ?, ?)').run(userId, result.agentId, 'whatsapp');
 
-    db.prepare('INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)')
-      .run(conv.id, 'user', text);
-
-    // Le Directeur traite et délègue, avec le contexte entreprise
-    const clientContext = buildClientContext(user);
-    const result = await pilot.handle(text, history, null, clientContext);
-
-    db.prepare('INSERT INTO messages (conversation_id, role, agent_id, content) VALUES (?, ?, ?, ?)')
-      .run(conv.id, 'assistant', result.agentId, result.content);
-    db.prepare('INSERT INTO activity_logs (user_id, agent_id, action) VALUES (?, ?, ?)')
-      .run(user.id, result.agentId, 'whatsapp');
-
-    // Réponse envoyée sur WhatsApp
-    await wa.sendMessage(from, result.content);
-    notify(user.id, `Nouveau message WhatsApp traité par ${result.agentName}`, '💬');
-
-    res.type('text/xml').send('<Response/>');
+    await wa.sendMessage(config, parsed.from, result.content);
+    notify(userId, `Message WhatsApp traité par ${result.agentName}`, '💬');
+    res.sendStatus(200);
   } catch (err) {
     console.error('[WhatsApp webhook]', err.message);
-    res.type('text/xml').send('<Response/>');
+    res.sendStatus(200);
   }
 });
 
-// Les routes suivantes nécessitent une authentification
 router.use(authMiddleware);
 
-/** GET /api/whatsapp/status — état de la configuration + numéro lié. */
+/** GET /api/whatsapp/status. */
 router.get('/status', (req, res) => {
-  const user = db.prepare('SELECT whatsapp_number FROM users WHERE id = ?').get(req.user.id);
-  res.json({
-    configured: wa.isConfigured(),
-    mode: wa.isConfigured() ? 'live' : 'simulation',
-    whatsapp_number: user?.whatsapp_number || null,
-  });
+  const cfg = waConfig(req.user.id);
+  res.json({ configured: wa.isConfigured(cfg), mode: wa.isConfigured(cfg) ? 'live' : 'simulation' });
 });
 
-/** POST /api/whatsapp/send — envoi manuel d'un message WhatsApp. */
+/** POST /api/whatsapp/send — envoi manuel. */
 router.post('/send', async (req, res) => {
   const { to, body } = req.body || {};
   if (!to || !body) return res.status(400).json({ error: 'Destinataire et message requis.' });
   try {
-    const r = await wa.sendMessage(to, body);
+    const r = await wa.sendMessage(waConfig(req.user.id), to, body);
     res.json({ success: true, ...r });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-/** GET /api/whatsapp/conversations — historique des échanges WhatsApp. */
+/** GET /api/whatsapp/conversations. */
 router.get('/conversations', (req, res) => {
-  const convs = db.prepare(
-    "SELECT * FROM conversations WHERE user_id = ? AND channel = 'whatsapp' ORDER BY created_at DESC"
-  ).all(req.user.id);
-  const withMessages = convs.map((c) => ({
-    ...c,
-    messages: db.prepare('SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC').all(c.id),
-  }));
-  res.json({ conversations: withMessages });
+  const convs = db.prepare("SELECT * FROM conversations WHERE user_id = ? AND channel = 'whatsapp' ORDER BY created_at DESC").all(req.user.id);
+  res.json({ conversations: convs.map((c) => ({ ...c, messages: db.prepare('SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC').all(c.id) })) });
 });
 
 module.exports = router;
