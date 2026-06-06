@@ -1,7 +1,7 @@
 'use client';
 /**
  * Interface de chat avec les agents.
- * L'utilisateur écrit à Pilot (routage automatique) ou choisit un agent
+ * L'utilisateur écrit au Directeur (routage automatique) ou choisit un agent
  * précis. Les conversations et messages sont persistés côté backend.
  */
 import { useEffect, useRef, useState } from 'react';
@@ -11,7 +11,7 @@ import { api } from '@/lib/api';
 import { AGENTS } from '@/lib/agents';
 
 export default function ChatPage() {
-  const [agentId, setAgentId] = useState('pilot');
+  const [agentId, setAgentId] = useState('directeur');
   const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -22,7 +22,7 @@ export default function ChatPage() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, sending]);
 
-  function newConversation(targetAgent = 'pilot') {
+  function newConversation(targetAgent = 'directeur') {
     setConversationId(null);
     setMessages([]);
     setAgentId(targetAgent);
@@ -43,7 +43,7 @@ export default function ChatPage() {
         body: {
           message: text,
           conversationId,
-          agentId: agentId === 'pilot' ? null : agentId,
+          agentId: agentId === 'directeur' ? null : agentId,
         },
       });
       setConversationId(d.conversationId);
@@ -72,7 +72,7 @@ export default function ChatPage() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold">Discuter avec vos agents</h1>
-          <p className="text-muted text-sm">Parlez à Pilot — il délègue au bon spécialiste — ou choisissez un agent.</p>
+          <p className="text-muted text-sm">Parlez au Directeur — il délègue au bon spécialiste — ou choisissez un agent.</p>
         </div>
         <button onClick={() => newConversation(agentId)} className="btn-secondary text-sm">
           + Nouvelle conversation
@@ -101,10 +101,10 @@ export default function ChatPage() {
               {currentAgent?.avatar || '🎯'}
             </div>
             <p className="font-semibold text-white/90">
-              {agentId === 'pilot' ? 'Pilot vous écoute' : `${currentAgent?.name} vous écoute`}
+              {agentId === 'directeur' ? 'Le Directeur vous écoute' : `${currentAgent?.name} vous écoute`}
             </p>
             <p className="text-sm text-muted mt-1 max-w-sm">
-              {agentId === 'pilot'
+              {agentId === 'directeur'
                 ? 'Décrivez votre besoin, je le confie à l\'agent le plus adapté.'
                 : currentAgent?.role}
             </p>
@@ -126,8 +126,8 @@ export default function ChatPage() {
               {m.role === 'assistant' && m.agentName && (
                 <div className="text-xs font-semibold text-cyan-400 mb-1">
                   {m.agentName}
-                  {m.routedBy === 'pilot' && agentId === 'pilot' && (
-                    <span className="font-normal text-muted"> · choisi par Pilot</span>
+                  {m.routedBy === 'directeur' && agentId === 'directeur' && (
+                    <span className="font-normal text-muted"> · choisi par le Directeur</span>
                   )}
                 </div>
               )}
@@ -160,7 +160,7 @@ export default function ChatPage() {
       {/* Saisie */}
       <form onSubmit={send} className="mt-3 flex gap-2">
         <input value={input} onChange={(e) => setInput(e.target.value)}
-          placeholder={`Écrire à ${agentId === 'pilot' ? 'Pilot' : currentAgent?.name}…`}
+          placeholder={`Écrire à ${agentId === 'directeur' ? 'Directeur' : currentAgent?.name}…`}
           className="input flex-1" />
         <button type="submit" disabled={sending || !input.trim()} className="btn-primary px-6">
           Envoyer

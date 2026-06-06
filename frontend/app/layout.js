@@ -18,7 +18,7 @@ export const metadata = {
   title: 'AutoPilote — Votre équipe d\'agents IA pour TPE/PME',
   description:
     'AutoPilote pilote 17 agents IA spécialisés (CRM, prospection, support, compta, devis…) ' +
-    'orchestrés par Pilot pour automatiser votre TPE/PME.',
+    'orchestrés par le Directeur pour automatiser votre TPE/PME.',
 };
 
 export default function RootLayout({ children }) {

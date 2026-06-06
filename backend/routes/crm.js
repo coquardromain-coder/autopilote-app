@@ -1,5 +1,5 @@
 /**
- * Routes CRM — gestion des contacts (domaine de l'agente Léa).
+ * Routes CRM — gestion des contacts (domaine de l'agent Commercial).
  */
 const express = require('express');
 const { db } = require('../db');

@@ -1,6 +1,6 @@
 # 📋 AutoPilote — Suivi de construction
 
-> Plateforme multi-agents IA pour TPE/PME — 17 agents orchestrés par **Pilot**.
+> Plateforme multi-agents IA pour TPE/PME — 17 agents orchestrés par **le Directeur**.
 > Dernière mise à jour : **3 juin 2026**.
 
 ## ✅ État global : les 4 phases sont terminées
@@ -20,30 +20,30 @@
 2. **Authentification JWT locale** — `backend/auth.js` (bcryptjs + jsonwebtoken), routes `/api/auth/*`, contexte React `lib/auth.js`.
 3. **Dashboard utilisateur** — coque protégée `app/dashboard/layout.js` + vue d'ensemble.
 4. **Connexion API Anthropic** — `backend/anthropic.js` (modèle `claude-sonnet-4-6`, repli automatique en mode démonstration sans clé).
-5. **Agent Pilot (orchestrateur)** — `backend/agents/pilot.js` : analyse d'intention par mots-clés + délégation.
+5. **Agent Directeur (orchestrateur)** — `backend/agents/pilot.js` : analyse d'intention par mots-clés + délégation.
 
 **Base de données** : SQLite via `better-sqlite3` (module npm standard avec binaires précompilés, compatible production et toutes versions de Node). Schéma dans `backend/db.js`.
 
 ## PHASE 2 — Premiers agents ✅
 
-6. **Agent Léa (CRM)** — routes `/api/crm/*`, page `dashboard/crm`.
-7. **Agent Sofia (support client)** — défini dans le registre, routé par Pilot.
-8. **Agent Manon (comptabilité)** — routes `/api/billing/invoices`, page facturation.
-9. **Interface de chat** — `app/dashboard/chat` : sélecteur d'agent, routage auto par Pilot, persistance des conversations.
+6. **Agent Commercial (CRM)** — routes `/api/crm/*`, page `dashboard/crm`.
+7. **Agent Assistance (support client)** — défini dans le registre, routé par le Directeur.
+8. **Agent Comptable (comptabilité)** — routes `/api/billing/invoices`, page facturation.
+9. **Interface de chat** — `app/dashboard/chat` : sélecteur d'agent, routage auto par le Directeur, persistance des conversations.
 
 ## PHASE 3 — Interface commerciale ✅
 
 10. **Page pricing (4 packs)** — `app/pricing` : Essentiel 297€, Croissance 749€, Elite 1 149€, Illimité 1 490€ + souscription (paiement **simulé**).
-11. **Onboarding nouveaux clients** — `app/onboarding` : parcours guidé en 3 étapes par Léa.
-12. **Tableau de bord analytics** — `app/dashboard` + routes `/api/analytics/*` (KPI, CA, activité par agent — agent Vox).
+11. **Onboarding nouveaux clients** — `app/onboarding` : parcours guidé par Commercial.
+12. **Tableau de bord analytics** — `app/dashboard` + routes `/api/analytics/*` (KPI, CA, activité par agent — agent Analyste).
 
 ## PHASE 4 — Agents complets ✅
 
 13. **Les 17 agents** — registre complet `backend/agents/registry.js` :
-    - **AutoPilote (8)** : Léa, Max, Sofia, Clara, Tom, Alex, Hub, Vox
-    - **Compta Pilote** : Manon
-    - **Devis Pilote** : Manon D.
-    - **Modules à la carte (8)** : Sol, Robin, Charly, Flora, Sam, Pablo, Victor, Maxi
+    - **AutoPilote (8)** : Commercial, Chasseur, Assistance, Créatif, Vocal, Relance, Coordinateur, Analyste
+    - **Compta Pilote** : Comptable
+    - **Devis Pilote** : Deviseur
+    - **Modules à la carte (8)** : Recruteur, Juriste, Référenceur, Community, Formateur, Stratège, Technicien, Assistant
 14. **Gestion multi-utilisateurs** — champ `role` (owner/member/admin) + section équipe dans les paramètres.
 15. **Tests & optimisations** — tests E2E backend (routage, CRM, facturation, abonnement, analytics) ✅ ; build de production frontend ✅ (14 routes) ; rendu visuel validé ✅.
 
@@ -53,7 +53,7 @@
 
 - ✅ Backend démarre, `/api/health` répond.
 - ✅ Inscription / connexion / JWT fonctionnels.
-- ✅ Pilot route correctement : « prospection »→Max, « support »→Sofia, « devis »→Manon D.
+- ✅ Le Directeur route correctement : « prospection »→Chasseur, « support »→Assistance, « devis »→Deviseur
 - ✅ Choix d'agent forcé respecté.
 - ✅ CRM, factures, devis, abonnement simulé, analytics opérationnels.
 - ✅ Build Next.js de production réussi (aucune erreur, aucune erreur console).
@@ -68,7 +68,7 @@ Ajoutée après les 4 phases initiales.
 Chaque agent (`backend/agents/registry.js`) dispose d'un **prompt système expert** :
 socle commun (français, ton pro & accessible, expertise métier, adaptation au secteur,
 cadre légal FR) + spécialisation approfondie (méthodes, vocabulaire, bonnes pratiques)
-pour Pilot, Léa, Max, Sofia, Clara, Tom, Alex, Hub, Vox, Manon, Manon D. (+ 8 modules).
+pour Directeur, Commercial, Chasseur, Assistance, Créatif, Vocal, Relance, Coordinateur, Analyste, Comptable, Deviseur (+ 8 modules).
 
 ### Étape 2 — Secteurs d'activité ✅
 `backend/sectors.js` : **8 secteurs préconfigurés** (Traiteur, Restaurant, Artisan,
@@ -95,9 +95,43 @@ Contexte agents (secteur + brief), Modèles de documents (prévisualisation).
 (`routes/chat.js` → `agents/pilot.js`). Les réponses sont ainsi personnalisées sans
 que le client ait à répéter son contexte. Migration BD non destructive (`db.js`).
 
-**Validé** : agent Manon D. chiffre un devis avec les vraies prestations et la TVA du
+**Validé** : agent Deviseur chiffre un devis avec les vraies prestations et la TVA du
 client ; prévisualisation des modèles pré-remplie ; onboarding et paramètres rendus en
 dark premium ; build de production OK.
+
+---
+
+## 🏷️ PHASE 6 — Renommage des agents en noms de poste ✅
+
+Tous les agents ont été renommés (prénoms → noms de poste), **IDs techniques inclus**
+(en minuscules, sans accent), dans tout le code et l'interface :
+
+| Avant | Après | id technique |
+|---|---|---|
+| Pilot | Directeur | `directeur` |
+| Léa | Commercial | `commercial` |
+| Max | Chasseur | `chasseur` |
+| Sofia | Assistance | `assistance` |
+| Clara | Créatif | `creatif` |
+| Tom | Vocal | `vocal` |
+| Alex | Relance | `relance` |
+| Hub | Coordinateur | `coordinateur` |
+| Vox | Analyste | `analyste` |
+| Manon | Comptable | `comptable` |
+| Manon D. | Deviseur | `deviseur` |
+| Sol | Recruteur | `recruteur` |
+| Robin | Juriste | `juriste` |
+| Charly | Référenceur | `referenceur` |
+| Flora | Community | `community` |
+| Sam | Formateur | `formateur` |
+| Pablo | Stratège | `stratege` |
+| Victor | Technicien | `technicien` |
+| Maxi | Assistant | `assistant` |
+
+Fichiers mis à jour : `registry.js` (ids, noms, prompts système), `pilot.js`, `chat.js`,
+`lib/agents.js`, chat, dashboard, onboarding, CRM, facturation, landing, layout, README.
+Domaines, rôles, mots-clés et fonctionnalités **inchangés**. Build de production OK,
+aucune occurrence des anciens noms ne subsiste (hors marque « AutoPilote »).
 
 ---
 

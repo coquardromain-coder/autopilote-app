@@ -1,7 +1,7 @@
 # 🎯 AutoPilote
 
 **Plateforme SaaS multi-agents IA pour TPE/PME.** 17 agents spécialisés
-orchestrés par **Pilot**, l'agent central qui analyse chaque demande et la
+orchestrés par **le Directeur**, l'agent central qui analyse chaque demande et la
 délègue au bon spécialiste.
 
 ## 🧱 Stack technique
@@ -17,11 +17,11 @@ délègue au bon spécialiste.
 
 ## 🤖 Les agents
 
-- **Orchestrateur** : Pilot 🎯
-- **AutoPilote (8)** : Léa (CRM), Max (prospection), Sofia (support), Clara (contenu), Tom (téléphonie), Alex (relances), Hub (coordination), Vox (analytics)
-- **Compta Pilote** : Manon 🧾
-- **Devis Pilote** : Manon D. 📄
-- **Modules à la carte (8)** : Sol (RH), Robin (juridique), Charly (marketing), Flora (réseaux sociaux), Sam (SEO), Pablo (design), Victor (veille), Maxi (e-commerce)
+- **Orchestrateur** : Directeur 🎯
+- **AutoPilote (8)** : Commercial (CRM), Chasseur (prospection), Assistance (support), Créatif (contenu), Vocal (téléphonie), Relance (relances), Coordinateur (coordination), Analyste (analytics)
+- **Compta Pilote** : Comptable 🧾
+- **Devis Pilote** : Deviseur 📄
+- **Modules à la carte (8)** : Recruteur (RH), Juriste (juridique), Référenceur (marketing), Community (réseaux sociaux), Formateur (SEO), Stratège (design), Technicien (veille), Assistant (e-commerce)
 
 ## 🚀 Démarrage rapide
 
@@ -85,11 +85,11 @@ autopilote-app/
 |---------|-------|-------------|
 | POST | `/api/auth/register` · `/login` | Inscription / connexion |
 | GET/PATCH | `/api/auth/me` | Profil & onboarding |
-| POST | `/api/chat/message` | Envoyer un message (Pilot route) |
-| GET/POST | `/api/crm/contacts` | CRM (Léa) |
+| POST | `/api/chat/message` | Envoyer un message (le Directeur route) |
+| GET/POST | `/api/crm/contacts` | CRM (Commercial) |
 | GET/POST | `/api/billing/invoices` · `/quotes` | Factures & devis |
 | POST | `/api/billing/subscribe` | Abonnement (paiement simulé) |
-| GET | `/api/analytics/overview` | Indicateurs (Vox) |
+| GET | `/api/analytics/overview` | Indicateurs (Analyste) |
 | GET | `/auth/google` · `/auth/google/callback` | Flux OAuth Google |
 | GET | `/api/google/status` | État de la connexion Google |
 | POST | `/api/google/gmail/send` | Envoyer un email (Gmail) |

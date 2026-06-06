@@ -1,5 +1,5 @@
 /**
- * Routes de chat avec les agents (via l'orchestrateur Pilot).
+ * Routes de chat avec les agents (via l'orchestrateur Directeur).
  * Gère les conversations, l'historique et l'envoi de messages.
  */
 const express = require('express');
@@ -44,7 +44,7 @@ router.get('/conversations/:id/messages', (req, res) => {
  * POST /api/chat/message — envoie un message et reçoit la réponse de l'agent.
  * Corps : { message, conversationId?, agentId? }
  *  - conversationId : pour continuer une conversation existante
- *  - agentId : pour s'adresser directement à un agent (sinon Pilot route)
+ *  - agentId : pour s'adresser directement à un agent (sinon le Directeur route)
  */
 router.post('/message', async (req, res) => {
   const { message, conversationId, agentId } = req.body || {};
@@ -60,7 +60,7 @@ router.post('/message', async (req, res) => {
       .get(conversationId, req.user.id);
     if (!conv) return res.status(404).json({ error: 'Conversation introuvable.' });
   } else {
-    const startAgent = agentId && getAgent(agentId) ? agentId : 'pilot';
+    const startAgent = agentId && getAgent(agentId) ? agentId : 'directeur';
     const title = message.slice(0, 40);
     const info = db
       .prepare(
@@ -87,7 +87,7 @@ router.post('/message', async (req, res) => {
   const fullUser = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
   const clientContext = buildClientContext(fullUser);
 
-  // Pilot route et génère la réponse (avec contexte entreprise injecté)
+  // Le Directeur route et génère la réponse (avec contexte entreprise injecté)
   const result = await pilot.handle(message, history, agentId || null, clientContext);
 
   // Enregistre la réponse de l'agent
@@ -95,7 +95,7 @@ router.post('/message', async (req, res) => {
     'INSERT INTO messages (conversation_id, role, agent_id, content) VALUES (?, ?, ?, ?)'
   ).run(conv.id, 'assistant', result.agentId, result.content);
 
-  // Journalise l'activité (pour Vox / analytics)
+  // Journalise l'activité (pour Analyste / analytics)
   db.prepare(
     'INSERT INTO activity_logs (user_id, agent_id, action) VALUES (?, ?, ?)'
   ).run(req.user.id, result.agentId, 'message');

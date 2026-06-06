@@ -1,5 +1,5 @@
 'use client';
-/** Page CRM — gestion des contacts (agente Léa). */
+/** Page CRM — gestion des contacts (agent Commercial). */
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 
@@ -51,7 +51,7 @@ export default function CrmPage() {
       <div className="flex items-center justify-between animate-fade-in-up">
         <div>
           <h1 className="text-3xl font-bold">CRM — Contacts</h1>
-          <p className="text-muted mt-1">Votre base clients & prospects, gérée par Léa 🤝</p>
+          <p className="text-muted mt-1">Votre base clients & prospects, gérée par Commercial 🤝</p>
         </div>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary">
           {showForm ? 'Fermer' : '+ Ajouter un contact'}

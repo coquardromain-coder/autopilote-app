@@ -35,7 +35,7 @@ function initSchema() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
-    -- Contacts CRM (gérés par Léa)
+    -- Contacts CRM (gérés par Commercial)
     CREATE TABLE IF NOT EXISTS contacts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -70,7 +70,7 @@ function initSchema() {
       FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
     );
 
-    -- Factures (gérées par Manon — compta pilote)
+    -- Factures (gérées par Comptable — compta pilote)
     CREATE TABLE IF NOT EXISTS invoices (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -83,7 +83,7 @@ function initSchema() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
-    -- Devis (gérés par Manon D. — devis pilote)
+    -- Devis (gérés par Deviseur — devis pilote)
     CREATE TABLE IF NOT EXISTS quotes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -123,7 +123,7 @@ function initSchema() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
-    -- Journal d'activité des agents (pour analytics / Vox)
+    -- Journal d'activité des agents (pour analytics / Analyste)
     CREATE TABLE IF NOT EXISTS activity_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,

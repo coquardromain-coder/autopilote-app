@@ -1,7 +1,7 @@
 /**
- * Pilot — l'agent orchestrateur central.
+ * Le Directeur — l'agent orchestrateur central.
  *
- * Pour chaque demande utilisateur, Pilot :
+ * Pour chaque demande utilisateur, le Directeur :
  *   1. analyse l'intention (détection par mots-clés, extensible à l'IA),
  *   2. choisit l'agent spécialisé le plus pertinent,
  *   3. fait répondre cet agent,
@@ -39,10 +39,10 @@ function routeIntent(message, forcedAgentId = null) {
   }
 
   const text = (message || '').toLowerCase();
-  let best = { id: 'pilot', score: 0 };
+  let best = { id: 'directeur', score: 0 };
 
   for (const agent of Object.values(AGENTS)) {
-    if (agent.id === 'pilot') continue;
+    if (agent.id === 'directeur') continue;
     let score = 0;
     for (const kw of agent.keywords) {
       // Correspondance par limites de mots (évite que « prospect » matche
@@ -50,13 +50,13 @@ function routeIntent(message, forcedAgentId = null) {
       // faisant partie d'un mot.
       if (matchesWord(text, kw)) score += 1;
     }
-    // Mention explicite du prénom de l'agent : fort bonus
+    // Mention explicite du nom de l'agent : fort bonus
     if (matchesWord(text, agent.name.toLowerCase())) score += 2;
     if (score > best.score) best = { id: agent.id, score };
   }
 
-  // Aucun mot-clé reconnu : Pilot répond lui-même et oriente
-  return best.score > 0 ? best.id : 'pilot';
+  // Aucun mot-clé reconnu : le Directeur répond lui-même et oriente
+  return best.score > 0 ? best.id : 'directeur';
 }
 
 /**
@@ -90,8 +90,8 @@ async function handle(message, history = [], forcedAgentId = null, clientContext
     agentName: agent.name,
     avatar: agent.avatar,
     content,
-    // Indique si Pilot a routé automatiquement (vs choix explicite)
-    routedBy: forcedAgentId ? 'utilisateur' : 'pilot',
+    // Indique si le Directeur a routé automatiquement (vs choix explicite)
+    routedBy: forcedAgentId ? 'utilisateur' : 'directeur',
   };
 }
 

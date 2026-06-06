@@ -1,5 +1,5 @@
 /**
- * Routes de facturation et devis (agents Manon & Manon D.)
+ * Routes de facturation et devis (agents Comptable & Deviseur)
  * ainsi que la gestion des abonnements (paiements SIMULÉS, pas de Stripe).
  */
 const express = require('express');
@@ -17,7 +17,7 @@ const PLANS = {
   illimite: { label: 'Pack Illimité', price: 1490 },
 };
 
-// ─────────────────── FACTURES (Manon) ───────────────────
+// ─────────────────── FACTURES (Comptable) ───────────────────
 
 /** GET /api/billing/invoices */
 router.get('/invoices', (req, res) => {
@@ -67,7 +67,7 @@ router.delete('/invoices/:id', (req, res) => {
   res.json({ success: true });
 });
 
-// ─────────────────── DEVIS (Manon D.) ───────────────────
+// ─────────────────── DEVIS (Deviseur) ───────────────────
 
 /** GET /api/billing/quotes */
 router.get('/quotes', (req, res) => {

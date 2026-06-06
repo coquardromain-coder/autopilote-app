@@ -1,5 +1,5 @@
 'use client';
-/** Tableau de bord — vue d'ensemble et indicateurs clés (agent Vox). */
+/** Tableau de bord — vue d'ensemble et indicateurs clés (agent Analyste). */
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
@@ -28,7 +28,7 @@ export default function DashboardHome() {
     <div className="space-y-8">
       <div className="animate-fade-in-up">
         <h1 className="text-3xl font-bold">Bonjour <span className="text-gradient">{user?.name?.split(' ')[0]}</span> 👋</h1>
-        <p className="text-muted mt-1">Voici l'état de votre activité, synthétisé par Vox.</p>
+        <p className="text-muted mt-1">Voici l'état de votre activité, synthétisé par Analyste.</p>
       </div>
 
       {error && <p className="text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</p>}
@@ -105,9 +105,9 @@ export default function DashboardHome() {
       {/* Accès rapide */}
       <div className="grid sm:grid-cols-3 gap-4">
         {[
-          { href: '/dashboard/chat', icon: '💬', title: 'Parler à Pilot', text: 'Posez votre question, il délègue.' },
-          { href: '/dashboard/crm', icon: '🤝', title: 'Gérer mes contacts', text: 'CRM avec Léa.' },
-          { href: '/dashboard/billing', icon: '🧾', title: 'Factures & devis', text: 'Avec Manon.' },
+          { href: '/dashboard/chat', icon: '💬', title: 'Parler au Directeur', text: 'Posez votre question, il délègue.' },
+          { href: '/dashboard/crm', icon: '🤝', title: 'Gérer mes contacts', text: 'CRM avec Commercial.' },
+          { href: '/dashboard/billing', icon: '🧾', title: 'Factures & devis', text: 'Avec Comptable.' },
         ].map((q) => (
           <Link key={q.href} href={q.href} className="glass-card glass-card-hover p-5 group">
             <div className="text-2xl transition-transform duration-300 group-hover:scale-110">{q.icon}</div>

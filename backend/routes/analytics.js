@@ -1,5 +1,5 @@
 /**
- * Routes analytics — tableau de bord et indicateurs (agent Vox).
+ * Routes analytics — tableau de bord et indicateurs (agent Analyste).
  * Agrège les données de l'utilisateur pour alimenter le dashboard.
  */
 const express = require('express');

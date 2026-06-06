@@ -13,7 +13,7 @@ export default function AgentsPage() {
     <div className="space-y-8">
       <div className="animate-fade-in-up">
         <h1 className="text-3xl font-bold">Vos <span className="text-gradient">17 agents</span></h1>
-        <p className="text-muted mt-1">Tous supervisés par Pilot, l'orchestrateur central.</p>
+        <p className="text-muted mt-1">Tous supervisés par le Directeur, l'orchestrateur central.</p>
       </div>
 
       {Object.entries(grouped).map(([cat, agents]) => (

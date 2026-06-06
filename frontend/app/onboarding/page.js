@@ -1,6 +1,6 @@
 'use client';
 /**
- * Parcours d'onboarding premium en 5 étapes (guidé par Léa) :
+ * Parcours d'onboarding premium en 5 étapes (guidé par Commercial) :
  * 1. Infos entreprise  2. Secteur  3. Prestations & tarifs
  * 4. Brief agents  5. Google Workspace (optionnel).
  */
@@ -91,11 +91,11 @@ export default function OnboardingPage() {
       <div className="blob w-[22rem] h-[22rem] bg-cyan-500/10 bottom-0 right-10 animate-float" style={{ animationDelay: '3s' }} />
 
       <div className="relative w-full max-w-xl glass-card p-8 animate-fade-in-up">
-        {/* En-tête Léa */}
+        {/* En-tête Commercial */}
         <div className="flex items-center gap-3 mb-5">
           <div className="grid place-items-center w-12 h-12 rounded-2xl bg-brand-500/15 border border-brand-500/20 text-2xl animate-pulse-glow">🤝</div>
           <div>
-            <div className="font-bold">Léa configure votre espace</div>
+            <div className="font-bold">Commercial configure votre espace</div>
             <div className="text-sm text-muted">Étape {step}/5 — {STEPS[step - 1]}</div>
           </div>
         </div>

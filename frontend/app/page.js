@@ -40,7 +40,7 @@ export default function HomePage() {
             <p className="mt-8 max-w-2xl mx-auto text-lg text-muted">
               AutoPilote met à votre service une équipe complète d'agents IA spécialisés —
               CRM, prospection, support, comptabilité, devis et bien plus — tous orchestrés
-              par <strong className="text-white">Pilot</strong>, votre chef d'orchestre intelligent.
+              par <strong className="text-white">le Directeur</strong>, votre chef d'orchestre intelligent.
             </p>
           </Reveal>
           <Reveal delay={240}>
@@ -59,8 +59,8 @@ export default function HomePage() {
         </Reveal>
         <div className="mt-14 grid md:grid-cols-3 gap-6">
           {[
-            { icon: '💬', title: 'Vous demandez', text: 'Exprimez votre besoin en langage naturel à Pilot.' },
-            { icon: '🎯', title: 'Pilot délègue', text: 'Il analyse l\'intention et confie la tâche au bon agent spécialisé.' },
+            { icon: '💬', title: 'Vous demandez', text: 'Exprimez votre besoin en langage naturel au Directeur.' },
+            { icon: '🎯', title: 'Le Directeur délègue', text: 'Il analyse l\'intention et confie la tâche au bon agent spécialisé.' },
             { icon: '✅', title: 'Vous recevez', text: 'L\'agent traite la demande et vous restitue un résultat actionnable.' },
           ].map((s, i) => (
             <Reveal key={s.title} delay={i * 100}>
@@ -79,7 +79,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4">
           <Reveal>
             <h2 className="text-3xl sm:text-4xl font-bold text-center">Vos 17 agents spécialisés</h2>
-            <p className="text-center text-muted mt-3">Tous supervisés par Pilot, l'orchestrateur central.</p>
+            <p className="text-center text-muted mt-3">Tous supervisés par le Directeur, l'orchestrateur central.</p>
           </Reveal>
 
           <div className="mt-14 space-y-12">

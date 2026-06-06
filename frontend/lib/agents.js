@@ -4,33 +4,33 @@
  */
 export const AGENTS = [
   // Orchestrateur
-  { id: 'pilot', name: 'Pilot', role: 'Orchestrateur central', category: 'orchestrateur', avatar: '🎯' },
+  { id: 'directeur', name: 'Directeur', role: 'Orchestrateur central', category: 'orchestrateur', avatar: '🎯' },
 
   // AutoPilote (8)
-  { id: 'lea', name: 'Léa', role: 'Onboarding & CRM', category: 'autopilote', avatar: '🤝' },
-  { id: 'max', name: 'Max', role: 'Prospection commerciale', category: 'autopilote', avatar: '🚀' },
-  { id: 'sofia', name: 'Sofia', role: 'Support client', category: 'autopilote', avatar: '💬' },
-  { id: 'clara', name: 'Clara', role: 'Création de contenu', category: 'autopilote', avatar: '✍️' },
-  { id: 'tom', name: 'Tom', role: 'Téléphonie & appels', category: 'autopilote', avatar: '📞' },
-  { id: 'alex', name: 'Alex', role: 'Relances & suivi', category: 'autopilote', avatar: '🔔' },
-  { id: 'hub', name: 'Hub', role: 'Coordination interne', category: 'autopilote', avatar: '🧩' },
-  { id: 'vox', name: 'Vox', role: 'Reporting & analytics', category: 'autopilote', avatar: '📊' },
+  { id: 'commercial', name: 'Commercial', role: 'Onboarding & CRM', category: 'autopilote', avatar: '🤝' },
+  { id: 'chasseur', name: 'Chasseur', role: 'Prospection commerciale', category: 'autopilote', avatar: '🚀' },
+  { id: 'assistance', name: 'Assistance', role: 'Support client', category: 'autopilote', avatar: '💬' },
+  { id: 'creatif', name: 'Créatif', role: 'Création de contenu', category: 'autopilote', avatar: '✍️' },
+  { id: 'vocal', name: 'Vocal', role: 'Téléphonie & appels', category: 'autopilote', avatar: '📞' },
+  { id: 'relance', name: 'Relance', role: 'Relances & suivi', category: 'autopilote', avatar: '🔔' },
+  { id: 'coordinateur', name: 'Coordinateur', role: 'Coordination interne', category: 'autopilote', avatar: '🧩' },
+  { id: 'analyste', name: 'Analyste', role: 'Reporting & analytics', category: 'autopilote', avatar: '📊' },
 
   // Compta Pilote
-  { id: 'manon', name: 'Manon', role: 'Comptabilité & facturation', category: 'compta', avatar: '🧾' },
+  { id: 'comptable', name: 'Comptable', role: 'Comptabilité & facturation', category: 'compta', avatar: '🧾' },
 
   // Devis Pilote
-  { id: 'manon-d', name: 'Manon D.', role: 'Génération de devis', category: 'devis', avatar: '📄' },
+  { id: 'deviseur', name: 'Deviseur', role: 'Génération de devis', category: 'devis', avatar: '📄' },
 
   // Modules à la carte (8)
-  { id: 'sol', name: 'Sol', role: 'Ressources humaines', category: 'module', avatar: '👥' },
-  { id: 'robin', name: 'Robin', role: 'Juridique & conformité', category: 'module', avatar: '⚖️' },
-  { id: 'charly', name: 'Charly', role: 'Marketing & publicité', category: 'module', avatar: '📣' },
-  { id: 'flora', name: 'Flora', role: 'Réseaux sociaux', category: 'module', avatar: '🌸' },
-  { id: 'sam', name: 'Sam', role: 'SEO & référencement', category: 'module', avatar: '🔎' },
-  { id: 'pablo', name: 'Pablo', role: 'Design & visuels', category: 'module', avatar: '🎨' },
-  { id: 'victor', name: 'Victor', role: 'Veille concurrentielle', category: 'module', avatar: '🛰️' },
-  { id: 'maxi', name: 'Maxi', role: 'E-commerce', category: 'module', avatar: '🛒' },
+  { id: 'recruteur', name: 'Recruteur', role: 'Ressources humaines', category: 'module', avatar: '👥' },
+  { id: 'juriste', name: 'Juriste', role: 'Juridique & conformité', category: 'module', avatar: '⚖️' },
+  { id: 'referenceur', name: 'Référenceur', role: 'Marketing & publicité', category: 'module', avatar: '📣' },
+  { id: 'community', name: 'Community', role: 'Réseaux sociaux', category: 'module', avatar: '🌸' },
+  { id: 'formateur', name: 'Formateur', role: 'SEO & référencement', category: 'module', avatar: '🔎' },
+  { id: 'stratege', name: 'Stratège', role: 'Design & visuels', category: 'module', avatar: '🎨' },
+  { id: 'technicien', name: 'Technicien', role: 'Veille concurrentielle', category: 'module', avatar: '🛰️' },
+  { id: 'assistant', name: 'Assistant', role: 'E-commerce', category: 'module', avatar: '🛒' },
 ];
 
 // Libellés lisibles des catégories
@@ -49,7 +49,7 @@ export const PLANS = [
     label: 'Pack Essentiel',
     price: 297,
     tagline: 'Pour démarrer l\'automatisation',
-    features: ['Agent Pilot inclus', '3 agents AutoPilote', 'CRM & support', 'Tableau de bord'],
+    features: ['Agent Directeur inclus', '3 agents AutoPilote', 'CRM & support', 'Tableau de bord'],
   },
   {
     id: 'croissance',
@@ -57,7 +57,7 @@ export const PLANS = [
     price: 749,
     tagline: 'Pour accélérer votre activité',
     popular: true,
-    features: ['Les 8 agents AutoPilote', 'Compta Pilote (Manon)', 'Devis Pilote', 'Analytics avancés', '2 modules au choix'],
+    features: ['Les 8 agents AutoPilote', 'Compta Pilote (Comptable)', 'Devis Pilote', 'Analytics avancés', '2 modules au choix'],
   },
   {
     id: 'elite',

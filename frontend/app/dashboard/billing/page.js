@@ -1,5 +1,5 @@
 'use client';
-/** Page facturation & devis (agents Manon & Manon D.). */
+/** Page facturation & devis (agents Comptable & Deviseur). */
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 
@@ -66,7 +66,7 @@ export default function BillingPage() {
     <div className="space-y-6">
       <div className="animate-fade-in-up">
         <h1 className="text-3xl font-bold">Facturation & Devis</h1>
-        <p className="text-muted mt-1">Géré par Manon 🧾 (factures) et Manon D. 📄 (devis).</p>
+        <p className="text-muted mt-1">Géré par Comptable 🧾 (factures) et Deviseur 📄 (devis).</p>
       </div>
 
       {/* Onglets */}
