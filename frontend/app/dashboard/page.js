@@ -12,56 +12,72 @@ export default function DashboardHome() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api('/api/analytics/overview')
-      .then(setData)
-      .catch((e) => setError(e.message));
+    api('/api/analytics/overview').then(setData).catch((e) => setError(e.message));
   }, []);
 
   const k = data?.kpis;
 
   const cards = [
-    { label: 'Contacts', value: k?.contacts, icon: '🤝', color: 'bg-blue-50 text-blue-600' },
-    { label: 'Clients', value: k?.clients, icon: '⭐', color: 'bg-amber-50 text-amber-600' },
-    { label: 'Conversations', value: k?.conversations, icon: '💬', color: 'bg-violet-50 text-violet-600' },
-    { label: 'Factures', value: k?.invoices, icon: '🧾', color: 'bg-emerald-50 text-emerald-600' },
+    { label: 'Contacts', value: k?.contacts, icon: '🤝', tint: 'from-brand-500/20 to-brand-500/0', ring: 'text-brand-300' },
+    { label: 'Clients', value: k?.clients, icon: '⭐', tint: 'from-amber-500/20 to-amber-500/0', ring: 'text-amber-300' },
+    { label: 'Conversations', value: k?.conversations, icon: '💬', tint: 'from-cyan-500/20 to-cyan-500/0', ring: 'text-cyan-300' },
+    { label: 'Factures', value: k?.invoices, icon: '🧾', tint: 'from-emerald-500/20 to-emerald-500/0', ring: 'text-emerald-300' },
   ];
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Bonjour {user?.name?.split(' ')[0]} 👋</h1>
-        <p className="text-slate-500 mt-1">Voici l'état de votre activité, synthétisé par Vox.</p>
+      <div className="animate-fade-in-up">
+        <h1 className="text-3xl font-bold">Bonjour <span className="text-gradient">{user?.name?.split(' ')[0]}</span> 👋</h1>
+        <p className="text-muted mt-1">Voici l'état de votre activité, synthétisé par Vox.</p>
       </div>
 
-      {error && <p className="text-red-600 bg-red-50 rounded-lg px-4 py-3">{error}</p>}
+      {error && <p className="text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</p>}
 
       {/* Cartes KPI */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => (
-          <div key={c.label} className="bg-white rounded-2xl border border-slate-100 p-5">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${c.color}`}>{c.icon}</div>
-            <div className="mt-3 text-3xl font-bold text-slate-900">{c.value ?? '—'}</div>
-            <div className="text-sm text-slate-500">{c.label}</div>
+          <div key={c.label} className="relative glass-card glass-card-hover p-5 overflow-hidden">
+            <div className={`absolute inset-0 bg-gradient-to-br ${c.tint} opacity-60`} />
+            <div className="relative">
+              <div className={`grid place-items-center w-11 h-11 rounded-xl bg-white/[0.06] border border-white/[0.08] text-xl ${c.ring}`}>{c.icon}</div>
+              {data ? (
+                <div className="mt-3 text-3xl font-bold font-mono">{c.value ?? 0}</div>
+              ) : (
+                <div className="mt-3 h-9 w-16 skeleton" />
+              )}
+              <div className="text-sm text-muted">{c.label}</div>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Chiffre d'affaires */}
       <div className="grid sm:grid-cols-2 gap-4">
-        <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-2xl p-6 text-white">
-          <div className="text-sm opacity-80">Chiffre d'affaires encaissé</div>
-          <div className="text-4xl font-bold mt-2">{(k?.revenue ?? 0).toLocaleString('fr-FR')} €</div>
+        <div className="relative glass-card p-6 overflow-hidden">
+          <div className="absolute inset-0 bg-brand-gradient opacity-90" />
+          <div className="relative">
+            <div className="text-sm text-white/80">Chiffre d'affaires encaissé</div>
+            {data ? (
+              <div className="text-4xl font-bold font-mono mt-2">{(k?.revenue ?? 0).toLocaleString('fr-FR')} €</div>
+            ) : <div className="mt-2 h-10 w-40 skeleton" />}
+          </div>
         </div>
-        <div className="bg-white border border-slate-100 rounded-2xl p-6">
-          <div className="text-sm text-slate-500">En attente de paiement</div>
-          <div className="text-4xl font-bold mt-2 text-slate-900">{(k?.pendingRevenue ?? 0).toLocaleString('fr-FR')} €</div>
+        <div className="glass-card p-6">
+          <div className="text-sm text-muted">En attente de paiement</div>
+          {data ? (
+            <div className="text-4xl font-bold font-mono mt-2">{(k?.pendingRevenue ?? 0).toLocaleString('fr-FR')} €</div>
+          ) : <div className="mt-2 h-10 w-40 skeleton" />}
         </div>
       </div>
 
       {/* Activité par agent */}
-      <div className="bg-white border border-slate-100 rounded-2xl p-6">
-        <h2 className="font-semibold text-slate-900">Agents les plus sollicités</h2>
-        {data?.activityByAgent?.length ? (
+      <div className="glass-card p-6">
+        <h2 className="font-semibold">Agents les plus sollicités</h2>
+        {!data ? (
+          <div className="mt-4 space-y-3">
+            {[0, 1, 2].map((i) => <div key={i} className="h-4 w-full skeleton" />)}
+          </div>
+        ) : data.activityByAgent?.length ? (
           <div className="mt-4 space-y-3">
             {data.activityByAgent.map((row) => {
               const agent = AGENTS.find((a) => a.id === row.agent_id);
@@ -69,40 +85,36 @@ export default function DashboardHome() {
               return (
                 <div key={row.agent_id} className="flex items-center gap-3">
                   <span className="text-xl w-7">{agent?.avatar || '🤖'}</span>
-                  <span className="w-24 text-sm text-slate-700">{agent?.name || row.agent_id}</span>
-                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-brand-500" style={{ width: `${(row.n / max) * 100}%` }} />
+                  <span className="w-24 text-sm text-white/80">{agent?.name || row.agent_id}</span>
+                  <div className="flex-1 h-2 bg-white/[0.06] rounded-full overflow-hidden">
+                    <div className="h-full bg-brand-gradient shadow-glow transition-all duration-700" style={{ width: `${(row.n / max) * 100}%` }} />
                   </div>
-                  <span className="text-sm text-slate-500 w-8 text-right">{row.n}</span>
+                  <span className="text-sm text-muted w-8 text-right font-mono">{row.n}</span>
                 </div>
               );
             })}
           </div>
         ) : (
-          <p className="text-sm text-slate-500 mt-3">
+          <p className="text-sm text-muted mt-3">
             Aucune activité pour l'instant.{' '}
-            <Link href="/dashboard/chat" className="text-brand-600 hover:underline">Discutez avec un agent</Link> pour démarrer.
+            <Link href="/dashboard/chat" className="text-cyan-400 hover:underline">Discutez avec un agent</Link> pour démarrer.
           </p>
         )}
       </div>
 
       {/* Accès rapide */}
       <div className="grid sm:grid-cols-3 gap-4">
-        <Link href="/dashboard/chat" className="bg-white border border-slate-100 rounded-2xl p-5 hover:border-brand-200 hover:shadow-sm transition">
-          <div className="text-2xl">💬</div>
-          <div className="font-semibold text-slate-900 mt-2">Parler à Pilot</div>
-          <div className="text-sm text-slate-500">Posez votre question, il délègue.</div>
-        </Link>
-        <Link href="/dashboard/crm" className="bg-white border border-slate-100 rounded-2xl p-5 hover:border-brand-200 hover:shadow-sm transition">
-          <div className="text-2xl">🤝</div>
-          <div className="font-semibold text-slate-900 mt-2">Gérer mes contacts</div>
-          <div className="text-sm text-slate-500">CRM avec Léa.</div>
-        </Link>
-        <Link href="/dashboard/billing" className="bg-white border border-slate-100 rounded-2xl p-5 hover:border-brand-200 hover:shadow-sm transition">
-          <div className="text-2xl">🧾</div>
-          <div className="font-semibold text-slate-900 mt-2">Factures & devis</div>
-          <div className="text-sm text-slate-500">Avec Manon.</div>
-        </Link>
+        {[
+          { href: '/dashboard/chat', icon: '💬', title: 'Parler à Pilot', text: 'Posez votre question, il délègue.' },
+          { href: '/dashboard/crm', icon: '🤝', title: 'Gérer mes contacts', text: 'CRM avec Léa.' },
+          { href: '/dashboard/billing', icon: '🧾', title: 'Factures & devis', text: 'Avec Manon.' },
+        ].map((q) => (
+          <Link key={q.href} href={q.href} className="glass-card glass-card-hover p-5 group">
+            <div className="text-2xl transition-transform duration-300 group-hover:scale-110">{q.icon}</div>
+            <div className="font-semibold mt-2">{q.title}</div>
+            <div className="text-sm text-muted">{q.text}</div>
+          </Link>
+        ))}
       </div>
     </div>
   );

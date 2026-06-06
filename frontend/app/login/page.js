@@ -19,7 +19,6 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const user = await login(email, password);
-      // Redirige vers l'onboarding si non terminé, sinon le dashboard
       router.push(user.onboarded ? '/dashboard' : '/onboarding');
     } catch (err) {
       setError(err.message);
@@ -29,41 +28,44 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        <Link href="/" className="flex items-center justify-center gap-2 font-bold text-2xl text-brand-700 mb-6">
-          <span>🎯</span> AutoPilote
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+      {/* Formes géométriques flottantes */}
+      <div className="absolute inset-0 bg-grid" />
+      <div className="blob w-[28rem] h-[28rem] bg-brand-500/20 -top-20 -left-10 animate-float" />
+      <div className="blob w-[24rem] h-[24rem] bg-cyan-500/10 bottom-0 right-0 animate-float" style={{ animationDelay: '4s' }} />
+
+      <div className="relative w-full max-w-md glass-card p-8 animate-fade-in-up">
+        <Link href="/" className="flex items-center justify-center gap-2 font-bold text-2xl mb-6">
+          <span className="grid place-items-center w-10 h-10 rounded-xl bg-brand-gradient shadow-glow animate-pulse-glow">🎯</span>
+          <span>AutoPilote</span>
         </Link>
-        <h1 className="text-xl font-bold text-center text-slate-900">Connexion à votre espace</h1>
+        <h1 className="text-xl font-bold text-center">Connexion à votre espace</h1>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-7 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <label className="label">Email</label>
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
-              placeholder="vous@entreprise.fr" />
+              className="input" placeholder="vous@entreprise.fr" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Mot de passe</label>
+            <label className="label">Mot de passe</label>
             <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
-              placeholder="••••••••" />
+              className="input" placeholder="••••••••" />
           </div>
 
-          {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+          {error && <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
 
-          <button type="submit" disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-brand-600 text-white font-semibold hover:bg-brand-700 disabled:opacity-60">
+          <button type="submit" disabled={loading} className="btn-primary w-full py-3">
             {loading ? 'Connexion…' : 'Se connecter'}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-slate-500">
+        <p className="mt-5 text-center text-sm text-muted">
           Pas encore de compte ?{' '}
-          <Link href="/register" className="text-brand-600 font-medium hover:underline">Créer un compte</Link>
+          <Link href="/register" className="text-cyan-400 font-medium hover:underline">Créer un compte</Link>
         </p>
-        <div className="mt-6 text-center text-xs text-slate-400 bg-slate-50 rounded-lg p-3">
-          Compte de démo : <strong>demo@autopilote.fr</strong> / <strong>demo1234</strong>
+        <div className="mt-6 text-center text-xs text-muted glass rounded-lg p-3">
+          Compte de démo : <span className="font-mono text-cyan-400">demo@autopilote.fr</span> / <span className="font-mono text-cyan-400">demo1234</span>
         </div>
       </div>
     </div>

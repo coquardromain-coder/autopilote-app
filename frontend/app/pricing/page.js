@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PublicNav from '@/components/PublicNav';
+import Reveal from '@/components/Reveal';
 import { PLANS } from '@/lib/agents';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
@@ -14,7 +15,6 @@ export default function PricingPage() {
   const [loadingPlan, setLoadingPlan] = useState(null);
 
   async function choosePlan(planId) {
-    // Si non connecté, on redirige vers l'inscription
     if (!user) {
       router.push('/register');
       return;
@@ -34,50 +34,50 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen">
       <PublicNav />
-      <section className="max-w-6xl mx-auto px-4 py-16">
-        <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-slate-900">Des tarifs simples et transparents</h1>
-          <p className="mt-4 text-slate-600">Choisissez le pack adapté à votre rythme de croissance.</p>
-          <p className="mt-2 text-xs text-slate-400">💡 Paiement simulé en environnement de démonstration — aucune carte requise.</p>
+      <section className="relative max-w-6xl mx-auto px-4 py-20">
+        <div className="absolute inset-0 bg-grid" />
+        <div className="relative text-center">
+          <Reveal>
+            <h1 className="text-4xl sm:text-5xl font-extrabold">Des tarifs <span className="text-gradient">simples et transparents</span></h1>
+            <p className="mt-4 text-muted">Choisissez le pack adapté à votre rythme de croissance.</p>
+            <p className="mt-2 text-xs text-muted">💡 Paiement simulé en environnement de démonstration — aucune carte requise.</p>
+          </Reveal>
         </div>
 
         {message && (
-          <div className="mt-8 max-w-2xl mx-auto bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-3 text-center">
+          <div className="relative mt-8 max-w-2xl mx-auto bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 rounded-xl px-4 py-3 text-center">
             {message}
           </div>
         )}
 
-        <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {PLANS.map((plan) => (
-            <div key={plan.id}
-              className={`relative rounded-2xl border p-6 flex flex-col ${
-                plan.popular ? 'border-brand-500 shadow-xl shadow-brand-600/10 ring-1 ring-brand-500' : 'border-slate-200 bg-white'
-              }`}>
-              {plan.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-brand-600 text-white text-xs font-semibold">
-                  Le plus choisi
-                </span>
-              )}
-              <h3 className="font-bold text-lg text-slate-900">{plan.label}</h3>
-              <p className="text-sm text-slate-500 mt-1 h-10">{plan.tagline}</p>
-              <div className="mt-4">
-                <span className="text-4xl font-extrabold text-slate-900">{plan.price}€</span>
-                <span className="text-slate-500"> /mois</span>
+        <div className="relative mt-14 grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {PLANS.map((plan, i) => (
+            <Reveal key={plan.id} delay={i * 80}>
+              <div className={`relative glass-card p-6 flex flex-col h-full ${plan.popular ? 'border-brand-500/50 shadow-glow' : 'glass-card-hover'}`}>
+                {plan.popular && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-gradient px-3 py-1 text-xs font-semibold shadow-glow">
+                    Le plus choisi
+                  </span>
+                )}
+                <h3 className="font-bold text-lg">{plan.label}</h3>
+                <p className="text-sm text-muted mt-1 h-10">{plan.tagline}</p>
+                <div className="mt-4">
+                  <span className="text-4xl font-extrabold">{plan.price}€</span>
+                  <span className="text-muted"> /mois</span>
+                </div>
+                <ul className="mt-6 space-y-3 flex-1">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-white/80">
+                      <span className="text-cyan-400 mt-0.5">✓</span> {f}
+                    </li>
+                  ))}
+                </ul>
+                <button onClick={() => choosePlan(plan.id)} disabled={loadingPlan === plan.id}
+                  className={`mt-6 w-full ${plan.popular ? 'btn-primary' : 'btn-secondary'}`}>
+                  {loadingPlan === plan.id ? 'Activation…' : user ? 'Choisir ce pack' : 'Commencer'}
+                </button>
               </div>
-              <ul className="mt-6 space-y-3 flex-1">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-slate-600">
-                    <span className="text-brand-600 mt-0.5">✓</span> {f}
-                  </li>
-                ))}
-              </ul>
-              <button onClick={() => choosePlan(plan.id)} disabled={loadingPlan === plan.id}
-                className={`mt-6 w-full py-2.5 rounded-lg font-semibold disabled:opacity-60 ${
-                  plan.popular ? 'bg-brand-600 text-white hover:bg-brand-700' : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
-                }`}>
-                {loadingPlan === plan.id ? 'Activation…' : user ? 'Choisir ce pack' : 'Commencer'}
-              </button>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>

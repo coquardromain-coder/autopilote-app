@@ -3,8 +3,17 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 
-const INVOICE_STATUS = { brouillon: 'bg-slate-100 text-slate-600', envoyee: 'bg-blue-100 text-blue-700', payee: 'bg-green-100 text-green-700' };
-const QUOTE_STATUS = { brouillon: 'bg-slate-100 text-slate-600', envoye: 'bg-blue-100 text-blue-700', accepte: 'bg-green-100 text-green-700', refuse: 'bg-red-100 text-red-700' };
+const INVOICE_STATUS = {
+  brouillon: 'bg-white/[0.06] text-muted border border-white/[0.08]',
+  envoyee: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/20',
+  payee: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20',
+};
+const QUOTE_STATUS = {
+  brouillon: 'bg-white/[0.06] text-muted border border-white/[0.08]',
+  envoye: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/20',
+  accepte: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20',
+  refuse: 'bg-red-500/15 text-red-300 border border-red-500/20',
+};
 
 export default function BillingPage() {
   const [tab, setTab] = useState('invoices');
@@ -55,48 +64,41 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Facturation & Devis</h1>
-        <p className="text-slate-500 mt-1">Géré par Manon 🧾 (factures) et Manon D. 📄 (devis).</p>
+      <div className="animate-fade-in-up">
+        <h1 className="text-3xl font-bold">Facturation & Devis</h1>
+        <p className="text-muted mt-1">Géré par Manon 🧾 (factures) et Manon D. 📄 (devis).</p>
       </div>
 
       {/* Onglets */}
       <div className="flex gap-2">
-        <button onClick={() => setTab('invoices')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === 'invoices' ? 'bg-brand-600 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}>
+        <button onClick={() => setTab('invoices')} className={tab === 'invoices' ? 'btn-primary text-sm' : 'btn-secondary text-sm'}>
           🧾 Factures
         </button>
-        <button onClick={() => setTab('quotes')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === 'quotes' ? 'bg-brand-600 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}>
+        <button onClick={() => setTab('quotes')} className={tab === 'quotes' ? 'btn-primary text-sm' : 'btn-secondary text-sm'}>
           📄 Devis
         </button>
       </div>
 
       {/* Formulaire de création */}
-      <form onSubmit={create} className="bg-white border border-slate-100 rounded-2xl p-6 grid sm:grid-cols-3 gap-4">
-        <input required value={form.client_name} onChange={update('client_name')} placeholder="Nom du client *"
-          className="px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none" />
-        <input required type="number" step="0.01" value={form.amount} onChange={update('amount')} placeholder="Montant € *"
-          className="px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none" />
-        <button type="submit" className="py-2.5 rounded-lg bg-brand-600 text-white font-semibold hover:bg-brand-700">
-          + Créer {tab === 'invoices' ? 'la facture' : 'le devis'}
-        </button>
+      <form onSubmit={create} className="glass-card p-6 grid sm:grid-cols-3 gap-4">
+        <input required value={form.client_name} onChange={update('client_name')} placeholder="Nom du client *" className="input" />
+        <input required type="number" step="0.01" value={form.amount} onChange={update('amount')} placeholder="Montant € *" className="input" />
+        <button type="submit" className="btn-primary">+ Créer {tab === 'invoices' ? 'la facture' : 'le devis'}</button>
         {tab === 'quotes' && (
-          <input value={form.content} onChange={update('content')} placeholder="Description de la prestation"
-            className="sm:col-span-3 px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none" />
+          <input value={form.content} onChange={update('content')} placeholder="Description de la prestation" className="input sm:col-span-3" />
         )}
       </form>
 
-      {error && <p className="text-red-600 bg-red-50 rounded-lg px-4 py-3">{error}</p>}
+      {error && <p className="text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</p>}
 
       {/* Liste */}
-      <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden">
+      <div className="glass-card overflow-hidden">
         {tab === 'invoices' ? (
           invoices.length === 0 ? (
-            <p className="p-8 text-center text-slate-400">Aucune facture.</p>
+            <p className="p-8 text-center text-muted">Aucune facture.</p>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-slate-500 text-left">
+              <thead className="bg-white/[0.03] text-muted text-left">
                 <tr>
                   <th className="px-4 py-3 font-medium">Numéro</th>
                   <th className="px-4 py-3 font-medium">Client</th>
@@ -105,22 +107,22 @@ export default function BillingPage() {
                   <th className="px-4 py-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-white/[0.06]">
                 {invoices.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500">{inv.number}</td>
-                    <td className="px-4 py-3 font-medium text-slate-900">{inv.client_name}</td>
-                    <td className="px-4 py-3 font-semibold">{inv.amount.toLocaleString('fr-FR')} €</td>
+                  <tr key={inv.id} className="hover:bg-white/[0.03] transition-colors">
+                    <td className="px-4 py-3 font-mono text-xs text-muted">{inv.number}</td>
+                    <td className="px-4 py-3 font-medium">{inv.client_name}</td>
+                    <td className="px-4 py-3 font-semibold font-mono">{inv.amount.toLocaleString('fr-FR')} €</td>
                     <td className="px-4 py-3">
                       <select value={inv.status} onChange={(e) => setInvoiceStatus(inv, e.target.value)}
-                        className={`text-xs rounded-full px-2 py-1 border-0 ${INVOICE_STATUS[inv.status]}`}>
-                        <option value="brouillon">Brouillon</option>
-                        <option value="envoyee">Envoyée</option>
-                        <option value="payee">Payée</option>
+                        className={`text-xs rounded-full px-2 py-1 outline-none ${INVOICE_STATUS[inv.status]}`}>
+                        <option className="bg-ink-800" value="brouillon">Brouillon</option>
+                        <option className="bg-ink-800" value="envoyee">Envoyée</option>
+                        <option className="bg-ink-800" value="payee">Payée</option>
                       </select>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => removeInvoice(inv)} className="text-red-500 hover:text-red-700 text-xs">Supprimer</button>
+                      <button onClick={() => removeInvoice(inv)} className="text-red-400 hover:text-red-300 text-xs transition-colors">Supprimer</button>
                     </td>
                   </tr>
                 ))}
@@ -128,10 +130,10 @@ export default function BillingPage() {
             </table>
           )
         ) : quotes.length === 0 ? (
-          <p className="p-8 text-center text-slate-400">Aucun devis.</p>
+          <p className="p-8 text-center text-muted">Aucun devis.</p>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-500 text-left">
+            <thead className="bg-white/[0.03] text-muted text-left">
               <tr>
                 <th className="px-4 py-3 font-medium">Numéro</th>
                 <th className="px-4 py-3 font-medium">Client</th>
@@ -140,26 +142,26 @@ export default function BillingPage() {
                 <th className="px-4 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/[0.06]">
               {quotes.map((q) => (
-                <tr key={q.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-mono text-xs text-slate-500">{q.number}</td>
-                  <td className="px-4 py-3 font-medium text-slate-900">
+                <tr key={q.id} className="hover:bg-white/[0.03] transition-colors">
+                  <td className="px-4 py-3 font-mono text-xs text-muted">{q.number}</td>
+                  <td className="px-4 py-3 font-medium">
                     {q.client_name}
-                    {q.content && <div className="text-xs text-slate-400 font-normal">{q.content}</div>}
+                    {q.content && <div className="text-xs text-muted font-normal">{q.content}</div>}
                   </td>
-                  <td className="px-4 py-3 font-semibold">{q.amount.toLocaleString('fr-FR')} €</td>
+                  <td className="px-4 py-3 font-semibold font-mono">{q.amount.toLocaleString('fr-FR')} €</td>
                   <td className="px-4 py-3">
                     <select value={q.status} onChange={(e) => setQuoteStatus(q, e.target.value)}
-                      className={`text-xs rounded-full px-2 py-1 border-0 ${QUOTE_STATUS[q.status]}`}>
-                      <option value="brouillon">Brouillon</option>
-                      <option value="envoye">Envoyé</option>
-                      <option value="accepte">Accepté</option>
-                      <option value="refuse">Refusé</option>
+                      className={`text-xs rounded-full px-2 py-1 outline-none ${QUOTE_STATUS[q.status]}`}>
+                      <option className="bg-ink-800" value="brouillon">Brouillon</option>
+                      <option className="bg-ink-800" value="envoye">Envoyé</option>
+                      <option className="bg-ink-800" value="accepte">Accepté</option>
+                      <option className="bg-ink-800" value="refuse">Refusé</option>
                     </select>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => removeQuote(q)} className="text-red-500 hover:text-red-700 text-xs">Supprimer</button>
+                    <button onClick={() => removeQuote(q)} className="text-red-400 hover:text-red-300 text-xs transition-colors">Supprimer</button>
                   </td>
                 </tr>
               ))}

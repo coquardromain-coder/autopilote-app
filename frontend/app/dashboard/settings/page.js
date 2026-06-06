@@ -39,69 +39,62 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-8 max-w-3xl">
-      <h1 className="text-2xl font-bold text-slate-900">Paramètres</h1>
+      <h1 className="text-3xl font-bold animate-fade-in-up">Paramètres</h1>
 
       {/* Profil */}
-      <section className="bg-white border border-slate-100 rounded-2xl p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">Profil</h2>
+      <section className="glass-card p-6">
+        <h2 className="font-semibold mb-4">Profil</h2>
         <form onSubmit={saveProfile} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Nom complet</label>
-            <input value={name} onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none" />
+            <label className="label">Nom complet</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Entreprise</label>
-            <input value={company} onChange={(e) => setCompany(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none" />
+            <label className="label">Entreprise</label>
+            <input value={company} onChange={(e) => setCompany(e.target.value)} className="input" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-            <input value={user?.email || ''} disabled
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-400" />
+            <label className="label">Email</label>
+            <input value={user?.email || ''} disabled className="input opacity-60 cursor-not-allowed" />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          {saved && <p className="text-sm text-green-600">✓ Profil mis à jour.</p>}
-          <button type="submit" className="px-4 py-2 rounded-lg bg-brand-600 text-white font-semibold hover:bg-brand-700">
-            Enregistrer
-          </button>
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          {saved && <p className="text-sm text-emerald-400">✓ Profil mis à jour.</p>}
+          <button type="submit" className="btn-primary">Enregistrer</button>
         </form>
       </section>
 
       {/* Abonnement */}
-      <section className="bg-white border border-slate-100 rounded-2xl p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">Abonnement</h2>
+      <section className="glass-card p-6">
+        <h2 className="font-semibold mb-4">Abonnement</h2>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <div className="text-lg font-bold text-slate-900">{currentPlan?.label || 'Pack ' + user?.plan}</div>
+            <div className="text-lg font-bold text-gradient">{currentPlan?.label || 'Pack ' + user?.plan}</div>
             {subscription ? (
-              <div className="text-sm text-slate-500">
-                {subscription.price}€ / mois — actif depuis le {subscription.started_at?.slice(0, 10)}
+              <div className="text-sm text-muted">
+                {subscription.price}€ / mois — actif depuis le <span className="font-mono">{subscription.started_at?.slice(0, 10)}</span>
               </div>
             ) : (
-              <div className="text-sm text-slate-500">Aucun abonnement payant actif (paiement simulé).</div>
+              <div className="text-sm text-muted">Aucun abonnement payant actif (paiement simulé).</div>
             )}
           </div>
-          <Link href="/pricing" className="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200">
-            Changer de pack
-          </Link>
+          <Link href="/pricing" className="btn-secondary">Changer de pack</Link>
         </div>
       </section>
 
       {/* Multi-utilisateurs */}
-      <section className="bg-white border border-slate-100 rounded-2xl p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">Équipe & utilisateurs</h2>
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
-          <div className="w-9 h-9 rounded-full bg-brand-600 text-white flex items-center justify-center font-semibold">
+      <section className="glass-card p-6">
+        <h2 className="font-semibold mb-4">Équipe & utilisateurs</h2>
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="grid place-items-center w-9 h-9 rounded-full bg-brand-gradient text-white font-semibold shadow-glow">
             {user?.name?.[0]?.toUpperCase()}
           </div>
           <div className="flex-1">
-            <div className="text-sm font-medium text-slate-900">{user?.name}</div>
-            <div className="text-xs text-slate-500">{user?.email}</div>
+            <div className="text-sm font-medium">{user?.name}</div>
+            <div className="text-xs text-muted">{user?.email}</div>
           </div>
-          <span className="text-xs px-2 py-1 rounded-full bg-brand-100 text-brand-700 capitalize">{user?.role}</span>
+          <span className="chip !text-brand-200 !border-brand-500/30 !bg-brand-500/10 capitalize">{user?.role}</span>
         </div>
-        <p className="text-xs text-slate-400 mt-3">
+        <p className="text-xs text-muted mt-3">
           La gestion multi-utilisateurs (rôles propriétaire / membre / admin) est disponible à partir du
           Pack Elite. L'invitation de collaborateurs sera activée prochainement.
         </p>
