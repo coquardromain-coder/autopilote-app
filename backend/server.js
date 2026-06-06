@@ -20,7 +20,11 @@ const PORT = process.env.PORT || 4000;
 
 // CORS configurable : FRONTEND_ORIGIN peut contenir plusieurs origines
 // séparées par des virgules (ex: "https://app.exemple.fr,http://localhost:3000").
-const DEFAULT_ORIGIN = 'http://ruo4s93g0vwuv3ogm0ayatpl.157.180.72.230.sslip.io';
+const DEFAULT_ORIGIN = [
+  'https://autopilote.famcofinances.com',                       // domaine de prod
+  'http://ruo4s93g0vwuv3ogm0ayatpl.157.180.72.230.sslip.io',    // ancien domaine sslip
+  'http://localhost:3000',                                      // développement local
+].join(',');
 const ALLOWED_ORIGINS = (process.env.FRONTEND_ORIGIN || DEFAULT_ORIGIN)
   .split(',')
   .map((o) => o.trim())
