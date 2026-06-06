@@ -18,17 +18,23 @@ initSchema();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// CORS configurable : FRONTEND_ORIGIN peut contenir plusieurs origines
+// CORS configurable. FRONTEND_ORIGIN peut contenir plusieurs origines
 // séparées par des virgules (ex: "https://app.exemple.fr,http://localhost:3000").
-const DEFAULT_ORIGIN = [
+//
+// Les origines de cette liste de base sont TOUJOURS autorisées (même si
+// FRONTEND_ORIGIN est défini autrement dans l'hébergeur), pour éviter une
+// mauvaise config d'env qui casserait la prod. FRONTEND_ORIGIN vient s'y ajouter.
+const BASE_ORIGINS = [
   'https://autopilote.famcofinances.com',                       // domaine de prod
   'http://ruo4s93g0vwuv3ogm0ayatpl.157.180.72.230.sslip.io',    // ancien domaine sslip
   'http://localhost:3000',                                      // développement local
-].join(',');
-const ALLOWED_ORIGINS = (process.env.FRONTEND_ORIGIN || DEFAULT_ORIGIN)
+];
+const ENV_ORIGINS = (process.env.FRONTEND_ORIGIN || '')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean);
+// Union sans doublon
+const ALLOWED_ORIGINS = [...new Set([...BASE_ORIGINS, ...ENV_ORIGINS])];
 
 // Middlewares globaux
 app.use(
