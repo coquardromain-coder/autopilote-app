@@ -80,11 +80,12 @@ async function request(config, method, path, body) {
 
 /**
  * Teste la connexion à Dolibarr.
- * Auth : en-tête DOLAPIKEY (Dolibarr 19.x). Endpoint : GET /api/index.php/version.
+ * Auth : en-tête DOLAPIKEY (Dolibarr 19.x). Endpoint : GET /api/index.php/status.
+ * Réponse attendue : {"success":{"code":200,"dolibarr_version":"19.0.2"}}
  */
 async function testConnection(config) {
   if (!config || !config.url) throw new NotConfiguredError();
-  const url = apiUrl(config, '/version');
+  const url = apiUrl(config, '/status');
   const res = await fetch(url, {
     method: 'GET',
     headers: { DOLAPIKEY: clean(config.apiKey) || '', Accept: 'application/json' },
@@ -92,16 +93,22 @@ async function testConnection(config) {
   const text = await res.text();
   if (!res.ok) {
     // Surface le vrai message de Dolibarr (utile pour 401/403/404/501…)
-    const hint = res.status === 501
+    const hint = res.status === 501 || res.status === 404
       ? ' (vérifiez que le module "API REST" est activé dans Dolibarr)'
       : res.status === 401 || res.status === 403
       ? ' (clé API invalide ou droits insuffisants)'
       : '';
-    throw new Error(`Dolibarr a répondu HTTP ${res.status} sur /api/index.php/version${hint} — ${text.slice(0, 200)}`);
+    throw new Error(`Dolibarr a répondu HTTP ${res.status} sur /api/index.php/status${hint} — ${text.slice(0, 200)}`);
   }
-  let version;
-  try { version = JSON.parse(text); } catch { version = text; }
-  return { success: true, version: typeof version === 'string' ? version.replace(/"/g, '') : (version?.version || 'OK') };
+  let data;
+  try { data = JSON.parse(text); } catch { data = text; }
+  // Format Dolibarr : { success: { code, dolibarr_version } }
+  const version =
+    data?.success?.dolibarr_version ||
+    data?.dolibarr_version ||
+    data?.version ||
+    (typeof data === 'string' ? data.replace(/"/g, '') : 'OK');
+  return { success: true, version };
 }
 
 // ─────────────────── Clients / prospects (thirdparties) ───────────────────
