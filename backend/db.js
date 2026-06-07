@@ -8,10 +8,21 @@
  */
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
-// Fichier de base de données local (créé automatiquement)
-const DB_PATH = path.join(__dirname, 'autopilote.db');
+// Emplacement du fichier SQLite.
+// En production (Coolify/Docker), définir DATABASE_PATH vers un VOLUME PERSISTANT
+// (ex: /app/data/autopilote.db) pour que la base survive aux redéploiements.
+// Par défaut : fichier local à côté du code (développement).
+const DB_PATH = process.env.DATABASE_PATH
+  ? path.resolve(process.env.DATABASE_PATH)
+  : path.join(__dirname, 'autopilote.db');
+
+// S'assure que le dossier parent existe (ex: /app/data monté en volume)
+fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+
 const db = new Database(DB_PATH);
+console.log(`[DB] SQLite : ${DB_PATH}`);
 
 // Active les clés étrangères
 db.pragma('foreign_keys = ON');

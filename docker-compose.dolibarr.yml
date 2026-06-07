@@ -1,20 +1,22 @@
 # ════════════════════════════════════════════════════════════════
-#  Dolibarr sur Coolify v4.1.1 — VERSION RECOMMANDÉE (Coolify-native)
+#  Dolibarr sur Coolify v4.1.1 — réseau coolify PERMANENT
 # ════════════════════════════════════════════════════════════════
 #
-# Pourquoi cette version : sur Coolify, le bloc `networks:` manuel + le réseau
-# "coolify" external créent souvent un CONFLIT qui empêche Traefik d'atteindre
-# le conteneur → Bad Gateway. Ici on NE déclare AUCUN réseau ni label : Coolify
-# crée le réseau du projet, y connecte Traefik ET les deux services, et génère
-# les labels Traefik automatiquement à partir de la variable magique
-# SERVICE_FQDN_DOLIBARR_80.
+# Cette version connecte Dolibarr et sa base au réseau "coolify" (où réside
+# Traefik) DIRECTEMENT dans le compose → plus besoin de "docker network connect"
+# manuel après chaque redéploiement.
+#
+# ⚠️ Le réseau externe doit s'appeler EXACTEMENT comme celui du proxy Coolify.
+#    Vérifie-le en SSH sur l'hôte :
+#      docker inspect coolify-proxy \
+#        --format '{{range $k,$v := .NetworkSettings.Networks}}{{println $k}}{{end}}'
+#    (souvent "coolify"). Si différent, remplace "coolify" ci-dessous.
 #
 # ┌─ DANS COOLIFY ────────────────────────────────────────────────┐
 # │ 1. Ressource Docker Compose → colle ce fichier.                │
-# │ 2. Onglet "Domains" du SERVICE dolibarr :                      │
-# │       https://dolibarr.famcofinances.com                       │
-# │ 3. Environment Variables : les 4 DOLIBARR_* (voir .env.example)│
-# │ 4. Deploy → ATTENDS 2-3 min (init MySQL + install Dolibarr).   │
+# │ 2. "Domains" du service dolibarr : https://dolibarr.famcofinances.com │
+# │ 3. Environment Variables : les 4 DOLIBARR_*                     │
+# │ 4. Deploy → attends 2-3 min.                                   │
 # └───────────────────────────────────────────────────────────────┘
 
 services:
@@ -25,8 +27,7 @@ services:
       dockerfile: Dockerfile.dolibarr
     restart: unless-stopped
     environment:
-      # ▼ Variable magique Coolify : expose le service "dolibarr" sur le port 80
-      #   et génère automatiquement le routage Traefik vers le domaine.
+      # Variable magique Coolify : expose le service sur le port 80 + routage Traefik
       - SERVICE_FQDN_DOLIBARR_80
       - DOLI_DB_HOST=dolibarr_db
       - DOLI_DB_NAME=dolibarr
@@ -44,8 +45,12 @@ services:
     depends_on:
       dolibarr_db:
         condition: service_healthy
+    networks:
+      - coolify           # réseau de Traefik (Coolify) → routage permanent
+      - dolibarr_internal # réseau privé pour parler à MySQL
     volumes:
-      - dolibarr_documents:/var/www/documents
+      - dolibarr_documents:/var/www/documents   # données/documents Dolibarr
+      - dolibarr_conf:/var/www/html/conf        # conf.php (persiste l'install)
 
   dolibarr_db:
     image: mysql:8.0
@@ -56,6 +61,8 @@ services:
       - MYSQL_DATABASE=dolibarr
       - MYSQL_USER=dolibarr
       - MYSQL_PASSWORD=${DOLIBARR_DB_PASSWORD}
+    networks:
+      - dolibarr_internal
     volumes:
       - dolibarr_db_data:/var/lib/mysql
     healthcheck:
@@ -65,6 +72,15 @@ services:
       retries: 15
       start_period: 30s
 
+networks:
+  # Réseau partagé du proxy Coolify (NE PAS recréer — il existe déjà)
+  coolify:
+    external: true
+  # Réseau privé Dolibarr ↔ MySQL
+  dolibarr_internal:
+    driver: bridge
+
 volumes:
-  dolibarr_documents:
-  dolibarr_db_data:
+  dolibarr_documents:   # /var/www/documents — données & documents
+  dolibarr_conf:        # /var/www/html/conf — configuration (conf.php)
+  dolibarr_db_data:     # /var/lib/mysql — base MySQL
