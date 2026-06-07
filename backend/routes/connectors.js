@@ -8,15 +8,9 @@ const { authMiddleware } = require('../auth');
 const { connectors, listConnectors } = require('../connectors');
 const store = require('../connectors/store');
 const google = require('../google');
-
-// Modules d'intégration
 const doli = require('../integrations/dolibarr');
-const metaWa = require('../integrations/whatsapp');
-const opensign = require('../integrations/opensign');
-const docuseal = require('../integrations/docuseal');
-const fonoster = require('../integrations/fonoster');
-const hunterio = require('../integrations/hunterio');
-const wordpress = require('../wordpress');
+const { testConnector } = require('../connectors/test');
+const { saveAndTest } = require('../connectors/save');
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -66,62 +60,14 @@ router.get('/:id', (req, res) => {
   res.json({ config: masked });
 });
 
-/** Teste la connexion d'un connecteur avec une config donnée. */
-async function testConnector(id, userId, config) {
-  switch (id) {
-    case 'dolibarr': return doli.testConnection({ url: config.url, apiKey: config.apikey });
-    case 'whatsapp': return metaWa.testConnection(config);
-    case 'opensign': return opensign.testConnection(config);
-    case 'docuseal': return docuseal.testConnection(config);
-    case 'fonoster': return fonoster.testConnection(config);
-    case 'hunterio': return hunterio.testConnection(config);
-    case 'wordpress':
-      if (!wordpress.isConfigured(config)) throw new Error('Champs WordPress incomplets');
-      await wordpress.getTags(config); return { success: true };
-    case 'stripe': {
-      if (!config.secretKey) throw new Error('Clé secrète Stripe manquante');
-      const r = await fetch('https://api.stripe.com/v1/balance', { headers: { Authorization: `Bearer ${config.secretKey}` } });
-      if (!r.ok) throw new Error('Clé Stripe invalide'); return { success: true };
-    }
-    case 'searchconsole': case 'analytics': case 'googlebusiness':
-      if (!google.getAccount(userId)) throw new Error('Connectez d\'abord Google Workspace');
-      return { success: true };
-    default: return { success: true };
-  }
-}
-
 /**
  * POST /api/connectors/:id — enregistre (chiffré) et teste la connexion.
  */
 router.post('/:id', async (req, res) => {
   const id = req.params.id;
   if (!connectors[id]) return res.status(404).json({ error: 'Connecteur inconnu.' });
-  const config = req.body || {};
-
-  // Cas particuliers : synchronise avec les systèmes existants
-  if (id === 'dolibarr') {
-    db.prepare('UPDATE users SET dolibarr_url=?, dolibarr_apikey=? WHERE id=?')
-      .run(config.url || null, config.apikey || null, req.user.id);
-  }
-  if (id === 'dolibarr_export') {
-    db.prepare('UPDATE users SET compta_email=? WHERE id=?').run(config.email_compta || null, req.user.id);
-  }
-  if (id === 'whatsapp') {
-    db.prepare('UPDATE users SET whatsapp_number=? WHERE id=?').run(config.whatsapp_number || userRow(req.user.id).whatsapp_number, req.user.id);
-  }
-
-  // Enregistre la config chiffrée
-  store.setConfig(req.user.id, id, config, 'en_cours');
-
-  // Test automatique de connexion
-  try {
-    const t = await testConnector(id, req.user.id, config);
-    store.setStatus(req.user.id, id, 'connecte');
-    res.json({ saved: true, success: true, status: 'connecte', version: t.version, name: t.name });
-  } catch (err) {
-    store.setStatus(req.user.id, id, 'erreur');
-    res.json({ saved: true, success: false, status: 'erreur', error: err.message });
-  }
+  const result = await saveAndTest(req.user.id, id, req.body || {});
+  res.json(result);
 });
 
 /** POST /api/connectors/:id/test — re-teste la connexion. */
