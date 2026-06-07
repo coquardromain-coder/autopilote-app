@@ -1,8 +1,21 @@
-version: '3.8'
+# Déploiement Dolibarr sur Coolify v4 (Hetzner) — corrige le "Bad Gateway".
+#
+# Causes du Bad Gateway corrigées ici :
+#  1) Le service Dolibarr est attaché au réseau "coolify" (où tourne le Traefik
+#     de Coolify) — sinon Traefik ne peut PAS joindre le conteneur → 502.
+#  2) Labels Traefik explicites : réseau cible + port interne (80) + TLS.
+#  3) Dolibarr attend que MySQL soit "healthy" avant de démarrer (depends_on
+#     condition), pour éviter le crash-loop au premier déploiement.
+#
+# ⚠️ Dans Coolify : laissez le champ "Domains" du service VIDE (on gère le
+#    routage via les labels ci-dessous), sinon Coolify ajoute des labels
+#    concurrents qui entrent en conflit.
+
 services:
   dolibarr:
     image: tuxgasy/dolibarr:latest
     container_name: dolibarr
+    restart: unless-stopped
     environment:
       DOLI_DB_HOST: dolibarr_db
       DOLI_DB_NAME: dolibarr
@@ -14,24 +27,65 @@ services:
       DOLI_COMPANY_NAME: ${DOLIBARR_COMPANY_NAME}
       DOLI_COMPANY_COUNTRY_ID: 1
       DOLI_MODULES: "modFacture,modCommande,modComptabilite,modSociete,modProduct,modPropal,modBanque,modTax"
-    ports:
-      - "8080:80"
+      # Installation automatique sans assistant web + mode production
+      DOLI_INSTALL_AUTO: 1
+      DOLI_PROD: 1
+      PHP_INI_DATE_TIMEZONE: Europe/Paris
     depends_on:
-      - dolibarr_db
+      dolibarr_db:
+        condition: service_healthy
+    networks:
+      - coolify          # réseau de Traefik (Coolify) — INDISPENSABLE
+      - dolibarr_internal # réseau privé pour parler à MySQL
     volumes:
-      - dolibarr_data:/var/www/html/documents
+      - dolibarr_documents:/var/www/documents
+    labels:
+      - traefik.enable=true
+      # Réseau que Traefik doit utiliser pour atteindre ce conteneur
+      - traefik.docker.network=coolify
+      # ── Routeur HTTPS ──
+      - "traefik.http.routers.dolibarr.rule=Host(`dolibarr.famcofinances.com`)"
+      - traefik.http.routers.dolibarr.entrypoints=https
+      - traefik.http.routers.dolibarr.tls=true
+      - traefik.http.routers.dolibarr.tls.certresolver=letsencrypt
+      - traefik.http.routers.dolibarr.service=dolibarr
+      # Port INTERNE réel du conteneur (Apache écoute sur 80)
+      - traefik.http.services.dolibarr.loadbalancer.server.port=80
+      # ── Routeur HTTP → redirection vers HTTPS ──
+      - "traefik.http.routers.dolibarr-http.rule=Host(`dolibarr.famcofinances.com`)"
+      - traefik.http.routers.dolibarr-http.entrypoints=http
+      - traefik.http.routers.dolibarr-http.middlewares=dolibarr-redirect
+      - traefik.http.middlewares.dolibarr-redirect.redirectscheme.scheme=https
 
   dolibarr_db:
     image: mysql:8.0
     container_name: dolibarr_db
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: ${DOLIBARR_DB_ROOT_PASSWORD}
       MYSQL_DATABASE: dolibarr
       MYSQL_USER: dolibarr
       MYSQL_PASSWORD: ${DOLIBARR_DB_PASSWORD}
+    networks:
+      - dolibarr_internal   # pas besoin d'exposer MySQL à Traefik
     volumes:
       - dolibarr_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DOLIBARR_DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+networks:
+  # Réseau partagé créé par Coolify où réside Traefik (NE PAS recréer)
+  coolify:
+    external: true
+  # Réseau privé interne Dolibarr ↔ MySQL
+  dolibarr_internal:
+    driver: bridge
 
 volumes:
-  dolibarr_data:
+  dolibarr_documents:
   dolibarr_db_data:
