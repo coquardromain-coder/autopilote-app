@@ -1,0 +1,26 @@
+# Image Dolibarr personnalisée — corrige l'API REST (PATH_INFO non transmis).
+# Basée sur tuxgasy/dolibarr, active mod_rewrite, applique notre VirtualHost
+# et force PHP à exposer correctement les variables serveur (PATH_INFO).
+FROM tuxgasy/dolibarr:latest
+
+# 1) Active les modules Apache nécessaires (mod_rewrite + headers)
+RUN a2enmod rewrite headers || true
+
+# 2) Applique notre configuration Apache (PATH_INFO + rewrite sur /api)
+COPY docker/dolibarr-apache.conf /etc/apache2/sites-available/000-default.conf
+
+# 3) Configuration PHP : transmission correcte des variables serveur
+#    (cgi.fix_pathinfo nécessaire si PHP-FPM/CGI ; sans effet en mod_php)
+RUN { \
+      echo 'cgi.fix_pathinfo=1'; \
+      echo 'expose_php=Off'; \
+    } > /usr/local/etc/php/conf.d/zz-dolibarr-pathinfo.ini 2>/dev/null \
+    || { \
+      mkdir -p /etc/php/conf.d 2>/dev/null; \
+      echo 'cgi.fix_pathinfo=1' > /etc/php/conf.d/zz-dolibarr-pathinfo.ini 2>/dev/null; \
+    } || true
+
+# 4) S'assure que le site par défaut est activé
+RUN a2ensite 000-default || true
+
+EXPOSE 80

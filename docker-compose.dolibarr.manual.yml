@@ -17,7 +17,10 @@
 
 services:
   dolibarr:
-    image: tuxgasy/dolibarr:latest
+    # Image personnalisée : corrige l'API REST (PATH_INFO) via Apache + mod_rewrite
+    build:
+      context: .
+      dockerfile: Dockerfile.dolibarr
     container_name: dolibarr
     restart: unless-stopped
     environment:
