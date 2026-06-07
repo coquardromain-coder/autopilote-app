@@ -22,11 +22,12 @@ class NotConfiguredError extends Error {
 /** Construit l'objet config à partir d'une ligne utilisateur. */
 function configFromUser(user) {
   if (!user) return {};
+  const t = (v) => (v == null ? null : String(v).trim());
   return {
-    url: user.dolibarr_url || null,
-    login: user.dolibarr_login || null,
-    password: user.dolibarr_password || null,
-    apiKey: user.dolibarr_apikey || null,
+    url: t(user.dolibarr_url),
+    login: t(user.dolibarr_login),
+    password: t(user.dolibarr_password),
+    apiKey: t(user.dolibarr_apikey),
   };
 }
 
@@ -35,9 +36,14 @@ function isConfigured(config) {
   return Boolean(config && config.url && (config.apiKey || (config.login && config.password)));
 }
 
+/** Nettoie une valeur de config (espaces/sauts de ligne issus d'un copier-coller). */
+function clean(v) { return v == null ? v : String(v).trim(); }
+
 /** Construit l'URL d'API complète. */
 function apiUrl(config, path) {
-  const base = String(config.url).replace(/\/$/, '');
+  // Retire les espaces et un éventuel /, voire un /api/index.php déjà saisi
+  let base = clean(config.url).replace(/\/+$/, '');
+  base = base.replace(/\/api\/index\.php$/i, '');
   return `${base}/api/index.php${path}`;
 }
 
@@ -56,10 +62,13 @@ async function getDolibarrToken(config) {
 
 /** Effectue une requête authentifiée vers l'API Dolibarr. */
 async function request(config, method, path, body) {
-  const token = await getDolibarrToken(config);
+  const token = clean(await getDolibarrToken(config));
+  // En-têtes : DOLAPIKEY (auth Dolibarr) ; Content-Type seulement si corps.
+  const headers = { DOLAPIKEY: token, Accept: 'application/json' };
+  if (body) headers['Content-Type'] = 'application/json';
   const res = await fetch(apiUrl(config, path), {
     method,
-    headers: { DOLAPIKEY: token, 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers,
     body: body ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
@@ -69,15 +78,30 @@ async function request(config, method, path, body) {
   return data;
 }
 
-/** Teste la connexion : GET /version. */
+/**
+ * Teste la connexion à Dolibarr.
+ * Auth : en-tête DOLAPIKEY (Dolibarr 19.x). Endpoint : GET /api/index.php/version.
+ */
 async function testConnection(config) {
   if (!config || !config.url) throw new NotConfiguredError();
-  const res = await fetch(apiUrl(config, '/version'), {
-    headers: { DOLAPIKEY: config.apiKey || '', Accept: 'application/json' },
+  const url = apiUrl(config, '/version');
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { DOLAPIKEY: clean(config.apiKey) || '', Accept: 'application/json' },
   });
-  if (!res.ok) throw new Error(`Connexion échouée (HTTP ${res.status})`);
-  const version = await res.json().catch(() => null);
-  return { success: true, version: typeof version === 'string' ? version : (version?.version || 'inconnue') };
+  const text = await res.text();
+  if (!res.ok) {
+    // Surface le vrai message de Dolibarr (utile pour 401/403/404/501…)
+    const hint = res.status === 501
+      ? ' (vérifiez que le module "API REST" est activé dans Dolibarr)'
+      : res.status === 401 || res.status === 403
+      ? ' (clé API invalide ou droits insuffisants)'
+      : '';
+    throw new Error(`Dolibarr a répondu HTTP ${res.status} sur /api/index.php/version${hint} — ${text.slice(0, 200)}`);
+  }
+  let version;
+  try { version = JSON.parse(text); } catch { version = text; }
+  return { success: true, version: typeof version === 'string' ? version.replace(/"/g, '') : (version?.version || 'OK') };
 }
 
 // ─────────────────── Clients / prospects (thirdparties) ───────────────────
