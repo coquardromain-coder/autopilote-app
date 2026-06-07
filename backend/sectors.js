@@ -110,6 +110,78 @@ const SECTORS = {
   },
 };
 
+// Exemples pré-remplis (brief + prestations) par secteur, pour l'onboarding.
+const EXAMPLES = {
+  traiteur: {
+    brief: "Je suis traiteur événementiel spécialisé mariages et séminaires en Loire-Atlantique. Je propose des prestations sur-mesure, du cocktail dînatoire au menu assis, avec service et personnel.",
+    prestations: [
+      { label: 'Cocktail dînatoire', price: 32, unit: 'personne' },
+      { label: 'Menu assis 3 services', price: 55, unit: 'personne' },
+      { label: 'Service & personnel', price: 250, unit: 'serveur' },
+    ],
+  },
+  restaurant: {
+    brief: "Je tiens un restaurant bistronomique au centre-ville. Cuisine de saison, produits locaux, midi et soir. Je cherche à fidéliser ma clientèle et remplir mes services.",
+    prestations: [
+      { label: 'Menu du midi', price: 19, unit: 'couvert' },
+      { label: 'Menu dégustation', price: 49, unit: 'couvert' },
+      { label: 'Privatisation', price: 1200, unit: 'soirée' },
+    ],
+  },
+  artisan: {
+    brief: "Je suis artisan plombier-chauffagiste. Dépannage d'urgence et chantiers de rénovation pour particuliers et syndics. Réactivité et travail soigné.",
+    prestations: [
+      { label: 'Dépannage', price: 90, unit: 'heure' },
+      { label: 'Installation chauffe-eau', price: 650, unit: 'forfait' },
+      { label: 'Rénovation salle de bain', price: 4500, unit: 'forfait' },
+    ],
+  },
+  commerce: {
+    brief: "Je tiens une boutique de prêt-à-porter, en magasin et en ligne. J'organise des temps forts commerciaux et je mise sur la fidélisation.",
+    prestations: [
+      { label: 'Vente en magasin', price: 0, unit: 'article' },
+      { label: 'Click & collect', price: 0, unit: 'commande' },
+      { label: 'Carte cadeau', price: 50, unit: 'unité' },
+    ],
+  },
+  liberal: {
+    brief: "Je suis consultant indépendant. J'accompagne les TPE/PME sur leur stratégie, au forfait ou au taux horaire. Confidentialité et expertise.",
+    prestations: [
+      { label: 'Conseil', price: 120, unit: 'heure' },
+      { label: 'Audit / diagnostic', price: 1500, unit: 'forfait' },
+      { label: 'Accompagnement mensuel', price: 900, unit: 'mois' },
+    ],
+  },
+  immobilier: {
+    brief: "Je suis agent immobilier. Estimation, vente et recherche de biens. Je qualifie les acquéreurs et j'assure un suivi sur tout le cycle de vente.",
+    prestations: [
+      { label: 'Estimation', price: 0, unit: 'bien' },
+      { label: 'Honoraires de vente', price: 4, unit: '% du prix' },
+      { label: 'Gestion locative', price: 7, unit: '% des loyers' },
+    ],
+  },
+  beaute: {
+    brief: "Je dirige un salon de coiffure / institut de beauté. Clientèle fidèle, prestations à la carte et vente de produits. Je veux remplir l'agenda et fidéliser.",
+    prestations: [
+      { label: 'Coupe & brushing', price: 35, unit: 'prestation' },
+      { label: 'Coloration', price: 60, unit: 'prestation' },
+      { label: 'Soin du visage', price: 70, unit: 'prestation' },
+    ],
+  },
+  generique: {
+    brief: "Décrivez votre activité, votre clientèle et votre positionnement en quelques phrases.",
+    prestations: [
+      { label: 'Prestation de conseil', price: 80, unit: 'heure' },
+      { label: 'Forfait accompagnement', price: 500, unit: 'mois' },
+    ],
+  },
+};
+
+/** Renvoie les exemples (brief + prestations) d'un secteur. */
+function getExamples(id) {
+  return EXAMPLES[id] || EXAMPLES.generique;
+}
+
 /** Liste des secteurs pour l'affichage (sans détail interne superflu). */
 function listSectors() {
   return Object.values(SECTORS).map((s) => ({
@@ -143,4 +215,4 @@ function sectorContext(id) {
   );
 }
 
-module.exports = { SECTORS, listSectors, getSector, sectorContext };
+module.exports = { SECTORS, listSectors, getSector, sectorContext, getExamples };
