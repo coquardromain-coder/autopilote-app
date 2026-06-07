@@ -37,6 +37,12 @@ router.post('/register', (req, res) => {
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
   const token = generateToken(user);
+
+  // Emails de bienvenue (non bloquant : l'inscription réussit quoi qu'il arrive)
+  require('../welcome')
+    .sendWelcomeEmails(publicUser(user), password)
+    .catch((e) => console.error('[Welcome] ', e.message));
+
   res.status(201).json({ token, user: publicUser(user) });
 });
 

@@ -279,6 +279,31 @@ endpoint testé (pack→outils, activation agents), parcours rendu de bout en bo
 
 ---
 
+## 🚀 PHASE 11 — Admin, onboarding simplifié & emails de bienvenue ✅
+
+### Interface ADMIN (conseiller)
+Auth séparée (`adminAuth.js`, `ADMIN_EMAIL`/`ADMIN_PASSWORD`, jeton `{admin:true}`).
+`routes/admin.js` : liste clients (pack + connecteurs), détail client (connecteurs,
+agents, conversations), **config des connecteurs à la place du client**, envoi email
+de bienvenue. Frontend `/admin` (login), `/admin/clients` (liste), `/admin/clients/[id]`
+(détail + modal de config + statut agents + conversations). Session séparée des clients.
+Connecteurs factorisés : `connectors/test.js` + `connectors/save.js` (réutilisés client/admin).
+
+### Onboarding simplifié (client)
+3 actions seulement : 1) infos entreprise 2) connecter Gmail (1 clic) 3) décrire l'activité.
+Le reste (WhatsApp, Dolibarr, réseaux sociaux, signature, téléphonie, SEO) est marqué
+« configuré par votre conseiller ». Bandeau : « votre conseiller vous contactera dans les 24h ».
+
+### Emails de bienvenue automatiques
+`mailer.js` (SMTP nodemailer, simulation si non configuré) + `welcome.js` : à l'inscription,
+notification interne à `contact@famcofinances.com` + email d'accueil au client (identifiants,
+lien appli, suivi 24h). Variables : `SMTP_*`, `MAIL_FROM`, `ADMIN_NOTIFY_EMAIL`.
+
+**Validé** : build OK (20 routes) ; admin testé (login, liste, détail, config connecteur,
+email bienvenue en simulation) ; onboarding simplifié rendu ; aucune erreur console.
+
+---
+
 ## 📝 Notes & limitations connues
 
 - **Mode IA** : sans `ANTHROPIC_API_KEY`, les agents répondent en *mode démonstration*
