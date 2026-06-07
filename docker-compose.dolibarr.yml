@@ -49,8 +49,8 @@ services:
       - coolify           # réseau de Traefik (Coolify) → routage permanent
       - dolibarr_internal # réseau privé pour parler à MySQL
     volumes:
-      - dolibarr_documents:/var/www/documents   # données/documents Dolibarr
-      - dolibarr_conf:/var/www/html/conf        # conf.php (persiste l'install)
+      - dolibarr_conf:/var/www/html/conf            # conf.php (persiste l'install)
+      - dolibarr_documents:/var/www/html/documents  # fichiers uploadés / documents
 
   dolibarr_db:
     image: mysql:8.0
@@ -81,6 +81,6 @@ networks:
     driver: bridge
 
 volumes:
-  dolibarr_documents:   # /var/www/documents — données & documents
   dolibarr_conf:        # /var/www/html/conf — configuration (conf.php)
-  dolibarr_db_data:     # /var/lib/mysql — base MySQL
+  dolibarr_documents:   # /var/www/html/documents — fichiers uploadés
+  dolibarr_db_data:     # /var/lib/mysql — base de données

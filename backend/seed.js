@@ -20,24 +20,25 @@ if (existing) {
   console.log('Ancien compte de démo supprimé.');
 }
 
-// Crée l'utilisateur de démonstration (onboarding déjà terminé, profil complet)
+// Crée l'utilisateur de démonstration (onboarding déjà terminé).
+// Pack : "Essentiel" → mappé sur le pack d'entrée actuel "starter" (49€).
+const PLAN = 'starter';
 const prestationsDemo = JSON.stringify([
-  { label: 'Dépannage plomberie', price: 90, unit: 'heure' },
-  { label: 'Installation chauffe-eau', price: 650, unit: 'forfait' },
-  { label: 'Rénovation salle de bain', price: 4500, unit: 'forfait' },
+  { label: 'Prestation de conseil', price: 80, unit: 'heure' },
+  { label: 'Forfait accompagnement', price: 500, unit: 'mois' },
 ]);
 const info = db
   .prepare(
     `INSERT INTO users
        (email, password_hash, name, company, plan, onboarded,
         sector, siret, address, vat_rate, prestations, brief)
-     VALUES (?, ?, ?, ?, 'business', 1, 'artisan', ?, ?, 10, ?, ?)`
+     VALUES (?, ?, ?, ?, ?, 1, 'generique', ?, ?, 20, ?, ?)`
   )
   .run(
-    EMAIL, hashPassword('demo1234'), 'Camille Démo', 'Démo SARL',
-    '12345678900012', '10 rue de Paris, 75001 Paris', prestationsDemo,
-    'Plombier-chauffagiste à Paris, dépannage 7j/7 et rénovation de salle de bain. ' +
-    'Clientèle de particuliers et syndics. Positionnement réactif et de confiance.'
+    EMAIL, hashPassword('demo1234'), 'Compte Démo', 'AutoPilote Démo', PLAN,
+    '00000000000000', '1 rue de la Démo, 75000 Paris', prestationsDemo,
+    'Entreprise de démonstration AutoPilote (secteur générique). ' +
+    'Sert à explorer les agents, le CRM, la facturation et les intégrations.'
   );
 const uid = info.lastInsertRowid;
 
@@ -75,11 +76,13 @@ db.prepare(
 ).run(uid, 'DEVIS-00000001', 'StartUp.io', 2500, 'envoye',
   'Prestation de conseil et accompagnement — forfait mensuel.');
 
-// Abonnement actif
+// Abonnement actif (pack d'entrée)
 db.prepare(
   `INSERT INTO subscriptions (user_id, plan, price, status)
-   VALUES (?, 'business', 99, 'active')`
-).run(uid);
+   VALUES (?, ?, 49, 'active')`
+).run(uid, PLAN);
 
-console.log('✅ Données de démonstration créées.');
-console.log('   Connexion : demo@autopilote.fr / demo1234');
+console.log('✅ Compte de démonstration créé.');
+console.log('   Email   : demo@autopilote.fr');
+console.log('   Mot de passe : demo1234');
+console.log('   Société : AutoPilote Démo · Secteur : Générique · Pack : Essentiel (starter)');
