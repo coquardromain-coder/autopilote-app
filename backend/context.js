@@ -52,6 +52,14 @@ function buildClientContext(user) {
   // Taux de TVA
   if (user.vat_rate != null) lines.push(`• Taux de TVA applicable : ${user.vat_rate} %`);
 
+  // Ton de communication souhaité
+  if (user.tone) {
+    const tones = { formel: 'formel et professionnel (vouvoiement strict)', semi: 'semi-formel et chaleureux', decontracte: 'décontracté et proche' };
+    lines.push(`• Ton à adopter avec les clients : ${tones[user.tone] || user.tone}`);
+  }
+  // Signature email à réutiliser
+  if (user.email_signature) lines.push(`• Signature email à utiliser :\n${user.email_signature}`);
+
   // Brief libre rédigé par le client
   if (user.brief) lines.push(`• Description de l'activité par le client : ${user.brief}`);
 

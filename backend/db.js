@@ -232,6 +232,12 @@ function migrate() {
   add('dolibarr_password', 'TEXT');      // mot de passe Dolibarr
   add('dolibarr_apikey', 'TEXT');        // clé API Dolibarr (DOLAPIKEY)
   add('compta_email', 'TEXT');           // email pour l'export EBP mensuel
+  add('phone', 'TEXT');                  // téléphone entreprise
+  add('billing_email', 'TEXT');          // email de facturation
+  add('tone', 'TEXT');                   // ton des agents (formel/semi/decontracte)
+  add('email_signature', 'TEXT');        // signature email automatique
+  add('onboarding_step', 'INTEGER NOT NULL DEFAULT 0'); // reprise de l'onboarding
+  add('dolibarr_provisioned', 'INTEGER NOT NULL DEFAULT 0'); // espace Dolibarr créé
 
   // Colonne "channel" sur conversations (web | whatsapp)
   const convCols = db.prepare('PRAGMA table_info(conversations)').all().map((c) => c.name);

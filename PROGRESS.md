@@ -253,6 +253,32 @@ Chiffrement AES-256 des clés (`ENCRYPTION_KEY`).
 
 ---
 
+## 🚀 PHASE 10 — Onboarding intelligent adapté au pack ✅
+
+Moteur `backend/onboarding.js` : catalogue d'outils, **outils par pack**
+(Starter 3 / Business 6 / Elite 10 / Agence 14, cumulatif) et **activation
+automatique des agents** selon leurs connecteurs requis/optionnels
+(Inactif / Actif basique / Actif complet / Actif). Route `routes/onboarding.js`
+(`GET /api/onboarding` état complet, `PATCH` sauvegarde de progression,
+`POST /dolibarr` Option A mutualisé). Exemples brief + prestations par secteur
+(`sectors.js`). Migration BD : `phone, billing_email, tone, email_signature,
+onboarding_step, dolibarr_provisioned`. Ton + signature injectés dans le contexte
+des agents (`context.js`).
+
+Frontend `app/onboarding` (dark premium, responsive) en 6 étapes :
+1. Entreprise (nom, SIRET, adresse, tél, **logo upload**, secteur, email facturation)
+2. Présentation de l'équipe IA incluse dans le pack
+3. **Connexion des outils** du pack (cards avec statut ⬜🔄✅⚠️, OAuth en nouvel
+   onglet, formulaires connecteurs + test, « Passer », « Rafraîchir »)
+4. Personnalisation : brief + prestations (**pré-remplis selon le secteur**), ton, signature
+5. Espace Dolibarr (Option A mutualisé, migration Option B prévue)
+6. Premier contact avec le Directeur (suggestion par secteur + **animation de célébration**)
+
+Progression **sauvegardée en base** (reprise possible). Validé : build OK (18 routes),
+endpoint testé (pack→outils, activation agents), parcours rendu de bout en bout.
+
+---
+
 ## 📝 Notes & limitations connues
 
 - **Mode IA** : sans `ANTHROPIC_API_KEY`, les agents répondent en *mode démonstration*
