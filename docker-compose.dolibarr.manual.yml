@@ -1,0 +1,90 @@
+# ════════════════════════════════════════════════════════════════
+#  Dolibarr sur Coolify v4.1.1 — VERSION LABELS TRAEFIK MANUELS
+# ════════════════════════════════════════════════════════════════
+#
+# À utiliser SEULEMENT si la version "Coolify-native" ne suffit pas et que tu
+# veux router toi-même. Remplace "REMPLACE_PAR_LE_VRAI_NOM_RESEAU" par le nom
+# EXACT du réseau auquel le proxy Coolify (coolify-proxy) est connecté.
+#
+# Trouver le nom (en SSH DIRECT sur l'hôte Hetzner, pas le terminal Coolify) :
+#   ssh root@157.180.72.230
+#   docker inspect coolify-proxy \
+#     --format '{{range $k,$v := .NetworkSettings.Networks}}{{println $k}}{{end}}'
+# (souvent "coolify", mais peut différer selon l'installation)
+#
+# Dans Coolify : laisse le champ "Domains" du service VIDE (le routage est géré
+# par les labels ci-dessous, sinon double routeur = conflit).
+
+services:
+  dolibarr:
+    image: tuxgasy/dolibarr:latest
+    container_name: dolibarr
+    restart: unless-stopped
+    environment:
+      - DOLI_DB_HOST=dolibarr_db
+      - DOLI_DB_NAME=dolibarr
+      - DOLI_DB_USER=dolibarr
+      - DOLI_DB_PASSWORD=${DOLIBARR_DB_PASSWORD}
+      - DOLI_ADMIN_LOGIN=admin
+      - DOLI_ADMIN_PASSWORD=${DOLIBARR_ADMIN_PASSWORD}
+      - DOLI_URL_ROOT=https://dolibarr.famcofinances.com
+      - DOLI_COMPANY_NAME=${DOLIBARR_COMPANY_NAME}
+      - DOLI_COMPANY_COUNTRY_ID=1
+      - DOLI_MODULES=modFacture,modCommande,modComptabilite,modSociete,modProduct,modPropal,modBanque,modTax
+      - DOLI_INSTALL_AUTO=1
+      - DOLI_PROD=1
+      - PHP_INI_DATE_TIMEZONE=Europe/Paris
+    depends_on:
+      dolibarr_db:
+        condition: service_healthy
+    volumes:
+      - dolibarr_documents:/var/www/documents
+    networks:
+      - proxy
+      - internal
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=REMPLACE_PAR_LE_VRAI_NOM_RESEAU
+      - "traefik.http.routers.dolibarr.rule=Host(`dolibarr.famcofinances.com`)"
+      - traefik.http.routers.dolibarr.entrypoints=https
+      - traefik.http.routers.dolibarr.tls=true
+      - traefik.http.routers.dolibarr.tls.certresolver=letsencrypt
+      - traefik.http.routers.dolibarr.service=dolibarr
+      - traefik.http.services.dolibarr.loadbalancer.server.port=80
+      - "traefik.http.routers.dolibarr-http.rule=Host(`dolibarr.famcofinances.com`)"
+      - traefik.http.routers.dolibarr-http.entrypoints=http
+      - traefik.http.routers.dolibarr-http.middlewares=dolibarr-redirect
+      - traefik.http.middlewares.dolibarr-redirect.redirectscheme.scheme=https
+
+  dolibarr_db:
+    image: mysql:8.0
+    container_name: dolibarr_db
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DOLIBARR_DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=dolibarr
+      - MYSQL_USER=dolibarr
+      - MYSQL_PASSWORD=${DOLIBARR_DB_PASSWORD}
+    volumes:
+      - dolibarr_db_data:/var/lib/mysql
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DOLIBARR_DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+networks:
+  # Réseau du proxy Coolify (mets le VRAI nom et external: true)
+  proxy:
+    external: true
+    name: REMPLACE_PAR_LE_VRAI_NOM_RESEAU
+  internal:
+    driver: bridge
+
+volumes:
+  dolibarr_documents:
+  dolibarr_db_data:
