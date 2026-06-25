@@ -41,6 +41,9 @@ Récapitulatif complet pour que **rien ne s'efface au redéploiement**.
 | `DOLIBARR_ADMIN_PASSWORD` | `<ADMIN_PASSWORD>` |
 | `DOLIBARR_COMPANY_NAME` | `AutoPilote Client` |
 
+> ⚠️ Ne jamais committer les vraies valeurs : définis-les côté Coolify (Environment
+> Variables) et garde des placeholders ici. Le repo est public.
+
 ---
 
 ## 3) 📦 Volumes persistants (Persistent Storage)
