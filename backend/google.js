@@ -30,22 +30,36 @@ function findCredentialsFile() {
 
 let CREDENTIALS = null;
 try {
-  const file = findCredentialsFile();
-  if (file) {
-    const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
-    // Le JSON Google encapsule les clés sous "web" ou "installed"
-    CREDENTIALS = raw.web || raw.installed || null;
-    console.log(`[Google] Identifiants chargés depuis ${path.basename(file)}`);
+  // PRIORITÉ 1 — Variables d'environnement (recommandé en production / Coolify)
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    CREDENTIALS = {
+      client_id: process.env.GOOGLE_CLIENT_ID.trim(),
+      client_secret: process.env.GOOGLE_CLIENT_SECRET.trim(),
+      redirect_uris: process.env.GOOGLE_REDIRECT_URI ? [process.env.GOOGLE_REDIRECT_URI.trim()] : [],
+    };
+    console.log('[Google] Identifiants chargés depuis les variables d\'environnement.');
   } else {
-    console.warn('[Google] Aucun fichier client_secret*.json trouvé — intégration désactivée.');
+    // PRIORITÉ 2 — Fichier client_secret*.json (développement local)
+    const file = findCredentialsFile();
+    if (file) {
+      const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+      // Le JSON Google encapsule les clés sous "web" ou "installed"
+      CREDENTIALS = raw.web || raw.installed || null;
+      console.log(`[Google] Identifiants chargés depuis ${path.basename(file)}`);
+    } else {
+      console.warn('[Google] Aucun identifiant Google (ni variables d\'env, ni client_secret*.json) — intégration désactivée.');
+    }
   }
 } catch (err) {
   console.error('[Google] Erreur de lecture des identifiants :', err.message);
 }
 
-// URI de redirection (doit correspondre à la Google Cloud Console)
+// URI de redirection (doit correspondre à la Google Cloud Console).
+// Priorité : GOOGLE_REDIRECT_URI > redirect_uris du JSON > construit depuis BACKEND_URL > défaut local.
 const REDIRECT_URI =
+  (process.env.GOOGLE_REDIRECT_URI && process.env.GOOGLE_REDIRECT_URI.trim()) ||
   (CREDENTIALS && CREDENTIALS.redirect_uris && CREDENTIALS.redirect_uris[0]) ||
+  (process.env.BACKEND_URL ? `${process.env.BACKEND_URL.replace(/\/$/, '')}/auth/google/callback` : null) ||
   'http://localhost:4000/auth/google/callback';
 
 // Périmètres demandés
