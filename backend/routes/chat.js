@@ -10,6 +10,7 @@ const { listAgents, getAgent } = require('../agents/registry');
 const { buildClientContext } = require('../context');
 const social = require('../social');
 const dolibarrAgent = require('../integrations/dolibarrAgent');
+const dolibarr = require('../integrations/dolibarr');
 const store = require('../connectors/store');
 const opensign = require('../integrations/opensign');
 const docuseal = require('../integrations/docuseal');
@@ -119,11 +120,24 @@ router.post('/message', async (req, res) => {
   const socialCmd = social.interpretCommand(message);        // réseaux sociaux
   const routeAgent = agentId || doliCmd?.agent || (socialCmd ? 'creatif' : null);
 
-  // Le Directeur route et génère la réponse (avec contexte entreprise injecté)
-  const result = await pilot.handle(message, history, routeAgent, clientContext);
+  // Le Directeur route et génère la réponse (avec contexte entreprise injecté).
+  // fullUser est transmis pour les agents outillés (Deviseur → outils Dolibarr).
+  const result = await pilot.handle(message, history, routeAgent, clientContext, fullUser);
 
-  // Commande Dolibarr : exécution (création devis, impayées, EBP, CA, prospect…)
-  if (doliCmd) {
+  // Le Deviseur gère désormais la création de devis via le function calling
+  // (recherche catalogue + tiers + devis). On débranche donc l'ancien pont regex
+  // create_devis pour lui QUAND Dolibarr est configuré ; sinon on laisse l'ancien
+  // chemin afficher le message de configuration. Les autres actions Dolibarr
+  // (impayées, CA, export EBP, prospect) restent inchangées.
+  const dolibarrConfigured = dolibarr.isConfigured(dolibarr.configFromUser(fullUser));
+  const handledByDeviseurTools =
+    doliCmd &&
+    doliCmd.action === 'create_devis' &&
+    result.agentId === 'deviseur' &&
+    dolibarrConfigured;
+
+  // Commande Dolibarr : exécution (impayées, EBP, CA, prospect, devis legacy…)
+  if (doliCmd && !handledByDeviseurTools) {
     result.content += await dolibarrAgent.perform(fullUser, doliCmd.action, result.content);
   }
 

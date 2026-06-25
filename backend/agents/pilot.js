@@ -8,7 +8,15 @@
  *   4. restitue la réponse en indiquant quel agent a traité la demande.
  */
 const { AGENTS, getAgent } = require('./registry');
-const { askAgent } = require('../anthropic');
+const { askAgent, askAgentWithTools } = require('../anthropic');
+const doli = require('../integrations/dolibarr');
+const dolibarrTools = require('../integrations/dolibarrTools');
+
+// Agents outillés avec le function calling Dolibarr (extensible).
+// Valeur = options de la boucle d'outils (tours / tokens).
+const TOOL_AGENTS = {
+  deviseur: { maxTurns: 10, maxTokens: 2048 },
+};
 
 /** Échappe les caractères spéciaux d'une chaîne pour un usage en regex. */
 function escapeRegex(str) {
@@ -65,9 +73,10 @@ function routeIntent(message, forcedAgentId = null) {
  * @param {Array} history - historique [{role, content}]
  * @param {string|null} forcedAgentId - agent imposé (depuis l'UI)
  * @param {string} clientContext - contexte entreprise à injecter (secteur, prestations…)
+ * @param {object|null} user - ligne utilisateur (pour la config Dolibarr des agents outillés)
  * @returns {Promise<{agentId, agentName, content, routedBy}>}
  */
-async function handle(message, history = [], forcedAgentId = null, clientContext = '') {
+async function handle(message, history = [], forcedAgentId = null, clientContext = '', user = null) {
   const agentId = routeIntent(message, forcedAgentId);
   const agent = getAgent(agentId);
 
@@ -83,7 +92,27 @@ async function handle(message, history = [], forcedAgentId = null, clientContext
     ? `${agent.systemPrompt}\n${clientContext}`
     : agent.systemPrompt;
 
-  const content = await askAgent(systemPrompt, messages);
+  let content = null;
+
+  // Agent outillé + Dolibarr configuré → voie function calling (outils Dolibarr).
+  const toolOpts = TOOL_AGENTS[agentId];
+  if (toolOpts && user) {
+    const config = doli.configFromUser(user);
+    if (doli.isConfigured(config)) {
+      content = await askAgentWithTools(
+        systemPrompt,
+        messages,
+        dolibarrTools.TOOLS,
+        (name, input) => dolibarrTools.execute(name, input, config),
+        toolOpts
+      );
+    }
+  }
+
+  // Voie texte simple (agents non outillés, ou Dolibarr non configuré).
+  if (content == null) {
+    content = await askAgent(systemPrompt, messages);
+  }
 
   return {
     agentId: agent.id,

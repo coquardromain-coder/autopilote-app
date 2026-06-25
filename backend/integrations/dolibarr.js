@@ -66,6 +66,9 @@ async function request(config, method, path, body) {
   // En-têtes : DOLAPIKEY (auth Dolibarr) ; Content-Type seulement si corps.
   const headers = { DOLAPIKEY: token, Accept: 'application/json' };
   if (body) headers['Content-Type'] = 'application/json';
+  if (process.env.DOLIBARR_DEBUG) {
+    console.log(`[Dolibarr] → ${method} ${path}${body ? ' payload=' + JSON.stringify(body) : ''}`);
+  }
   const res = await fetch(apiUrl(config, path), {
     method,
     headers,
@@ -73,8 +76,38 @@ async function request(config, method, path, body) {
   });
   const text = await res.text();
   let data;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-  if (!res.ok) throw new Error(typeof data === 'object' ? (data?.error?.message || JSON.stringify(data)) : data || `Erreur ${res.status}`);
+  let parsed = true;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; parsed = false; }
+
+  if (process.env.DOLIBARR_DEBUG) {
+    console.log(`[Dolibarr] ← ${method} ${path} HTTP ${res.status} body=${(text || '').slice(0, 300)}`);
+  }
+
+  // Une "vraie" erreur Dolibarr a la forme { error: { code, message } }.
+  const isErrorBody = parsed && data && typeof data === 'object' && !Array.isArray(data) && data.error;
+
+  if (!res.ok) {
+    // Quirk Dolibarr 19.0.2 : renvoie PARFOIS HTTP 500 (voire 4xx) AVEC un corps
+    // JSON parfaitement valide correspondant au SUCCÈS de l'opération (même
+    // comportement déjà toléré par testConnection). On ne lève une erreur que si
+    // le corps est une vraie erreur Dolibarr, ou n'est pas du JSON exploitable.
+    const usableBody = parsed && data !== null && data !== undefined && !isErrorBody;
+    if (usableBody) {
+      if (process.env.DOLIBARR_DEBUG) {
+        console.warn(`[Dolibarr] ⚠ HTTP ${res.status} sur ${method} ${path} mais corps valide → traité comme succès.`);
+      }
+      return data;
+    }
+    const msg = isErrorBody
+      ? (data.error.message || data.error.code || JSON.stringify(data.error))
+      : (typeof data === 'string' && data ? data.slice(0, 200) : `Erreur HTTP ${res.status}`);
+    throw new Error(msg);
+  }
+
+  // Réponse 2xx mais corps d'erreur explicite (rare) → on le signale aussi.
+  if (isErrorBody) {
+    throw new Error(data.error.message || data.error.code || JSON.stringify(data.error));
+  }
   return data;
 }
 
@@ -183,6 +216,122 @@ async function createProduit(config, data) {
   return request(config, 'POST', '/products', { label: data.label, price: data.price, type: 0 });
 }
 
+/**
+ * Normalise une réponse de liste Dolibarr en tableau.
+ * Dolibarr 19.x renvoie parfois un OBJET UNIQUE (et non un tableau) quand il n'y
+ * a qu'un seul enregistrement — on le réenveloppe pour un traitement uniforme.
+ */
+function asArray(data) {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') return [data];
+  return [];
+}
+
+/**
+ * Extrait un id numérique depuis une réponse Dolibarr, qui peut être :
+ *   - un nombre (12) ou une chaîne ("12") — id renvoyé directement par un POST,
+ *   - un objet société/devis complet { id: "1", ... } (id en CHAÎNE en 19.0.2).
+ * @returns {number|null}
+ */
+function extractId(data) {
+  if (data == null) return null;
+  if (typeof data === 'number') return data;
+  if (typeof data === 'string') {
+    const n = Number(data);
+    return Number.isFinite(n) ? n : null;
+  }
+  if (typeof data === 'object' && data.id != null) return extractId(data.id);
+  return null;
+}
+
+/** Normalise une chaîne : minuscules, sans accents, sans espaces superflus. */
+function normalize(s) {
+  return String(s == null ? '' : s)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim();
+}
+
+/** Ne conserve que les champs utiles d'un produit pour l'agent. */
+function slimProduct(p) {
+  return {
+    id: p.id,
+    ref: p.ref,
+    label: p.label,
+    // Le catalogue est en TTC ; on expose price_ttc et la TVA de la fiche produit.
+    price_ttc: p.price_ttc != null ? Number(p.price_ttc) : null,
+    price_ht: p.price != null ? Number(p.price) : null,
+    tva_tx: p.tva_tx != null ? Number(p.tva_tx) : null,
+    tosell: Number(p.status) === 1,
+  };
+}
+
+/**
+ * Recherche tolérante dans le catalogue produits.
+ * Récupère le catalogue puis filtre en mémoire (insensible accents/casse,
+ * correspondance partielle) — robuste aux libellés sans accents ("Menu Elegance").
+ * @param {object} config
+ * @param {{query?:string, ref?:string, category?:string, tosellOnly?:boolean}} opts
+ */
+async function searchProducts(config, opts = {}) {
+  if (!isConfigured(config)) return simulatedProduits().map(slimProduct);
+  const all = await request(config, 'GET', '/products?limit=1000');
+  let list = asArray(all);
+
+  if (opts.tosellOnly) list = list.filter((p) => Number(p.status) === 1);
+
+  if (opts.ref) {
+    const r = normalize(opts.ref);
+    list = list.filter((p) => normalize(p.ref).includes(r));
+  }
+  // "catégorie" et "query" sont traitées en correspondance partielle sur ref+label
+  // (les libellés du catalogue regroupent déjà les familles : "Cocktail…", "Menu…").
+  const needles = [opts.category, opts.query].map(normalize).filter(Boolean);
+  for (const n of needles) {
+    list = list.filter((p) => normalize(p.label).includes(n) || normalize(p.ref).includes(n));
+  }
+  return list.map(slimProduct);
+}
+
+// ─────────────────── Tiers (recherche) & devis (lecture unitaire) ───────────────────
+
+/**
+ * Cherche un tiers par son nom (insensible accents/casse, partiel).
+ * @returns {Promise<object|null>} le tiers trouvé (ou null)
+ */
+async function findThirdpartyByName(config, name) {
+  if (!isConfigured(config)) return null;
+  if (!name || !String(name).trim()) return null;
+  const all = await request(config, 'GET', '/thirdparties?limit=1000');
+  const list = asArray(all); // Dolibarr 19.x peut renvoyer un objet unique
+  const target = normalize(name);
+  // Priorité à l'égalité exacte, sinon correspondance partielle dans les deux sens.
+  return (
+    list.find((t) => normalize(t.name) === target) ||
+    list.find((t) => normalize(t.name).includes(target) || target.includes(normalize(t.name))) ||
+    null
+  );
+}
+
+/** Crée un tiers (client/prospect). type client : 1=client, 2=prospect, 3=les deux. */
+async function createThirdparty(config, data) {
+  if (!isConfigured(config)) throw new NotConfiguredError();
+  return request(config, 'POST', '/thirdparties', {
+    name: data.name,
+    client: data.client != null ? data.client : 2,
+    email: data.email || '',
+    phone: data.phone || '',
+    address: data.address || '',
+  });
+}
+
+/** Lit un devis (proposal) par son id — utilisé pour vérifier les totaux. */
+async function getProposal(config, id) {
+  if (!isConfigured(config)) throw new NotConfiguredError();
+  return request(config, 'GET', `/proposals/${id}`);
+}
+
 // ─────────────────── Comptabilité ───────────────────
 
 async function getEcritures(config, dateDebut, dateFin) {
@@ -274,6 +423,8 @@ module.exports = {
   getDevis, createDevis, sendDevis,
   getFactures, createFacture, getFacturesImpayees,
   getProduits, createProduit,
+  searchProducts, slimProduct, normalize, asArray, extractId,
+  findThirdpartyByName, createThirdparty, getProposal,
   getEcritures, exportEBP,
   getBanque,
 };
