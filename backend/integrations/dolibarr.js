@@ -91,7 +91,14 @@ async function testConnection(config) {
     headers: { DOLAPIKEY: clean(config.apiKey) || '', Accept: 'application/json' },
   });
   const text = await res.text();
-  if (!res.ok) {
+  let data;
+  try { data = JSON.parse(text); } catch { data = null; }
+
+  // Dolibarr 19.0.2 renvoie parfois HTTP 500 AVEC un body valide
+  // {"success":{"code":200,"dolibarr_version":"19.0.2"}} → on considère ça OK.
+  const okBody = data && data.success && Number(data.success.code) === 200;
+
+  if (!res.ok && !okBody) {
     // Surface le vrai message de Dolibarr (utile pour 401/403/404/501…)
     const hint = res.status === 501 || res.status === 404
       ? ' (vérifiez que le module "API REST" est activé dans Dolibarr)'
@@ -100,8 +107,8 @@ async function testConnection(config) {
       : '';
     throw new Error(`Dolibarr a répondu HTTP ${res.status} sur /api/index.php/status${hint} — ${text.slice(0, 200)}`);
   }
-  let data;
-  try { data = JSON.parse(text); } catch { data = text; }
+
+  if (data === null) data = text;
   // Format Dolibarr : { success: { code, dolibarr_version } }
   const version =
     data?.success?.dolibarr_version ||
