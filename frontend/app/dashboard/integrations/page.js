@@ -45,8 +45,8 @@ export default function IntegrationsPage() {
 
   function openModal(c) { setModal(c); setForm({}); setResult(null); }
 
-  function connectGoogle() { window.location.href = `${API_URL}/auth/google?token=${encodeURIComponent(getToken())}`; }
-  function connectOauth(provider) { window.location.href = `${API_URL}/auth/${provider}?token=${encodeURIComponent(getToken())}`; }
+  function connectGoogle() { window.location.href = `${API_URL}/api/auth/google?token=${encodeURIComponent(getToken())}`; }
+  function connectOauth(provider) { window.location.href = `${API_URL}/api/auth/${provider}?token=${encodeURIComponent(getToken())}`; }
 
   async function save() {
     setSaving(true); setResult(null);

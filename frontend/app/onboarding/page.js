@@ -48,7 +48,7 @@ export default function OnboardingPage() {
   }
   async function next() { await save({ step: step + 1 }); setStep((s) => s + 1); }
   function prev() { setStep((s) => Math.max(0, s - 1)); }
-  function connectGmail() { window.open(`${API_URL}/auth/google?token=${encodeURIComponent(getToken())}`, '_blank'); }
+  function connectGmail() { window.open(`${API_URL}/api/auth/google?token=${encodeURIComponent(getToken())}`, '_blank'); }
   function onLogo(e) {
     const file = e.target.files?.[0]; if (!file) return;
     if (file.size > 300 * 1024) { alert('Logo trop lourd (max 300 Ko).'); return; }

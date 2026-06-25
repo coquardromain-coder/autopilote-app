@@ -18,7 +18,7 @@ const PROVIDERS = {
     configured: () => Boolean(META_APP_ID && META_APP_SECRET),
     authUrl: (state) =>
       `https://www.facebook.com/v19.0/dialog/oauth?client_id=${META_APP_ID}` +
-      `&redirect_uri=${encodeURIComponent(BACKEND + '/auth/facebook/callback')}` +
+      `&redirect_uri=${encodeURIComponent(BACKEND + '/api/auth/facebook/callback')}` +
       `&state=${encodeURIComponent(state)}&scope=pages_manage_posts,instagram_basic`,
   },
   linkedin: {
@@ -26,7 +26,7 @@ const PROVIDERS = {
     configured: () => Boolean(LINKEDIN_CLIENT_ID && LINKEDIN_CLIENT_SECRET),
     authUrl: (state) =>
       `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${LINKEDIN_CLIENT_ID}` +
-      `&redirect_uri=${encodeURIComponent(BACKEND + '/auth/linkedin/callback')}` +
+      `&redirect_uri=${encodeURIComponent(BACKEND + '/api/auth/linkedin/callback')}` +
       `&state=${encodeURIComponent(state)}&scope=w_member_social`,
   },
 };

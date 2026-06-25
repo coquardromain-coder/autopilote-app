@@ -74,11 +74,20 @@ app.get('/api/health', (_req, res) => {
 });
 
 // Montage des routes
-// Flux OAuth montés à la racine (Google d'abord, puis réseaux sociaux)
-app.use('/auth', require('./routes/googleAuth'));
-app.use('/auth', require('./routes/socialAuth'));
+const googleAuthRouter = require('./routes/googleAuth');
+const socialAuthRouter = require('./routes/socialAuth');
 
+// Flux OAuth montés à la racine /auth (setup avec routage par hôte)
+app.use('/auth', googleAuthRouter);
+app.use('/auth', socialAuthRouter);
+
+// Auth applicative (login/register/me) — DOIT précéder les routeurs OAuth
+// sous /api/auth, car socialAuth a une route attrape-tout /:provider.
 app.use('/api/auth', require('./routes/auth'));
+// Alias OAuth sous /api/auth : couvre les reverse proxies qui ne routent que
+// /api/* vers le backend → /api/auth/google/callback fonctionne aussi.
+app.use('/api/auth', googleAuthRouter);
+app.use('/api/auth', socialAuthRouter);
 app.use('/api/google', require('./routes/google'));
 app.use('/api/config', require('./routes/config'));
 app.use('/api/whatsapp', require('./routes/whatsapp'));
