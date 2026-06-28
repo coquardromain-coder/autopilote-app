@@ -11,11 +11,44 @@ const { AGENTS, getAgent } = require('./registry');
 const { askAgent, askAgentWithTools } = require('../anthropic');
 const doli = require('../integrations/dolibarr');
 const dolibarrTools = require('../integrations/dolibarrTools');
+const comptableTools = require('../integrations/comptableTools');
 
-// Agents outillés avec le function calling Dolibarr (extensible).
-// Valeur = options de la boucle d'outils (tours / tokens).
+/**
+ * Registre des agents OUTILLÉS (function calling).
+ *
+ * Chaque entrée :
+ *   - opts  : options de la boucle d'outils (tours / tokens),
+ *   - build(ctx) : renvoie { tools, execute } à partir du contexte résolu
+ *                  (configs des services du client), ou `null` si le service
+ *                  requis n'est pas configuré (→ repli sur la voie texte simple).
+ *
+ * `ctx` porte les configs par client : { userId, dolibarr, ... } — ce qui permet
+ * à un agent d'utiliser plusieurs services (ex. futur Chasseur : Dolibarr + Hunter).
+ *
+ * Le Deviseur (validé) garde un exécuteur lié au `config` Dolibarr BRUT, donc son
+ * comportement est strictement identique à avant la factorisation.
+ */
 const TOOL_AGENTS = {
-  deviseur: { maxTurns: 10, maxTokens: 2048 },
+  deviseur: {
+    opts: { maxTurns: 10, maxTokens: 2048 },
+    build: (ctx) =>
+      doli.isConfigured(ctx.dolibarr)
+        ? {
+            tools: dolibarrTools.TOOLS,
+            execute: (name, input) => dolibarrTools.execute(name, input, ctx.dolibarr),
+          }
+        : null,
+  },
+  comptable: {
+    opts: { maxTurns: 10, maxTokens: 2048 },
+    build: (ctx) =>
+      doli.isConfigured(ctx.dolibarr)
+        ? {
+            tools: comptableTools.TOOLS,
+            execute: (name, input) => comptableTools.execute(name, input, ctx),
+          }
+        : null,
+  },
 };
 
 /** Échappe les caractères spéciaux d'une chaîne pour un usage en regex. */
@@ -94,22 +127,27 @@ async function handle(message, history = [], forcedAgentId = null, clientContext
 
   let content = null;
 
-  // Agent outillé + Dolibarr configuré → voie function calling (outils Dolibarr).
-  const toolOpts = TOOL_AGENTS[agentId];
-  if (toolOpts && user) {
-    const config = doli.configFromUser(user);
-    if (doli.isConfigured(config)) {
+  // Agent outillé → voie function calling, si son service requis est configuré.
+  const entry = TOOL_AGENTS[agentId];
+  if (entry && user) {
+    // Contexte des services du client (résolus une fois, partagés par les tools).
+    const ctx = {
+      userId: user.id,
+      dolibarr: doli.configFromUser(user),
+    };
+    const built = entry.build(ctx);
+    if (built) {
       content = await askAgentWithTools(
         systemPrompt,
         messages,
-        dolibarrTools.TOOLS,
-        (name, input) => dolibarrTools.execute(name, input, config),
-        toolOpts
+        built.tools,
+        built.execute,
+        entry.opts
       );
     }
   }
 
-  // Voie texte simple (agents non outillés, ou Dolibarr non configuré).
+  // Voie texte simple (agents non outillés, ou service requis non configuré).
   if (content == null) {
     content = await askAgent(systemPrompt, messages);
   }

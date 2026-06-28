@@ -124,20 +124,24 @@ router.post('/message', async (req, res) => {
   // fullUser est transmis pour les agents outillés (Deviseur → outils Dolibarr).
   const result = await pilot.handle(message, history, routeAgent, clientContext, fullUser);
 
-  // Le Deviseur gère désormais la création de devis via le function calling
-  // (recherche catalogue + tiers + devis). On débranche donc l'ancien pont regex
-  // create_devis pour lui QUAND Dolibarr est configuré ; sinon on laisse l'ancien
-  // chemin afficher le message de configuration. Les autres actions Dolibarr
-  // (impayées, CA, export EBP, prospect) restent inchangées.
+  // Les agents OUTILLÉS (function calling) gèrent désormais certaines actions
+  // directement via leurs tools Dolibarr. On débranche donc l'ancien pont regex
+  // pour ces couples (action, agent) QUAND Dolibarr est configuré ; sinon on
+  // laisse l'ancien chemin (qui affiche au besoin le message de configuration).
+  // Les autres actions (CA → analyste, prospect → commercial) restent inchangées.
   const dolibarrConfigured = dolibarr.isConfigured(dolibarr.configFromUser(fullUser));
-  const handledByDeviseurTools =
+  const TOOL_HANDLED = [
+    { action: 'create_devis', agent: 'deviseur' },       // Deviseur (validé)
+    { action: 'factures_impayees', agent: 'comptable' }, // Comptable (lecture)
+    { action: 'export_ebp', agent: 'comptable' },        // Comptable (lecture)
+  ];
+  const handledByTools =
     doliCmd &&
-    doliCmd.action === 'create_devis' &&
-    result.agentId === 'deviseur' &&
-    dolibarrConfigured;
+    dolibarrConfigured &&
+    TOOL_HANDLED.some((h) => h.action === doliCmd.action && result.agentId === h.agent);
 
-  // Commande Dolibarr : exécution (impayées, EBP, CA, prospect, devis legacy…)
-  if (doliCmd && !handledByDeviseurTools) {
+  // Commande Dolibarr : exécution legacy (CA, prospect, et fallbacks non outillés…)
+  if (doliCmd && !handledByTools) {
     result.content += await dolibarrAgent.perform(fullUser, doliCmd.action, result.content);
   }
 

@@ -38,3 +38,7 @@ Thumbs.db
 
 # Réglages locaux Claude Code (propres à la machine)
 .claude/settings.local.json
+
+# Fichiers de travail sécurité (NE JAMAIS versionner — contiennent des secrets)
+secrets.txt
+NEXT-STEPS.md
